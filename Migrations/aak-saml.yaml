@@ -11,4 +11,4 @@ table_storage:
   table_name: bundle_migration_aak_saml
 
 migrations_paths:
-  KimaiPlugin2\AakSamlBundle\Migrations: var/plugins/AakSamlBundle/Migrations
+  KimaiPlugin\AakSamlBundle\Migrations: var/plugins/AakSamlBundle/Migrations
