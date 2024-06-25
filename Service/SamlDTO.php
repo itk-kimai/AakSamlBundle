@@ -76,7 +76,6 @@ class SamlDTO
      */
     public readonly string $office;
 
-
     /**
      * @throws AakSamlException
      */
@@ -99,10 +98,12 @@ class SamlDTO
     }
 
     /**
-     * Hydrate id values from id array. E.g. [1001;1004;1012;1103;6530]
+     * Hydrate id values from id array. E.g. [1001;1004;1012;1103;6530].
      *
      * @param string $idValues
+     *
      * @return void
+     *
      * @throws AakSamlException
      */
     private function hydrateIdValues(string $idValues): void
@@ -110,18 +111,18 @@ class SamlDTO
         $ids = \explode(';', $idValues);
 
         if (\count($ids) < 5) {
-            throw new AakSamlException('Unexpected number of values for SAML ids. Expected 5 or more, ' . count($ids) . ' given.');
+            throw new AakSamlException('Unexpected number of values for SAML ids. Expected 5 or more, '.count($ids).' given.');
         }
 
         \array_walk($ids, function (&$value) {
             $value = intval($value);
 
             if (0 > $value) {
-                throw new AakSamlException('Invalid id value:' . $value . ' Expected a positive integer.');
+                throw new AakSamlException('Invalid id value:'.$value.' Expected a positive integer.');
             }
 
             if (0 === $value) {
-                throw new AakSamlException('Invalid id value:' . $value . ' Cannot convert to integer.');
+                throw new AakSamlException('Invalid id value:'.$value.' Cannot convert to integer.');
             }
         });
 
@@ -143,10 +144,10 @@ class SamlDTO
             if (1 === count($subArray)) {
                 return $subArray[0];
             } else {
-                throw new AakSamlException('Unexpected number of values for SAML attribute: ' . $attributeName . ' Expected 1, ' . count($subArray) . ' given.');
+                throw new AakSamlException('Unexpected number of values for SAML attribute: '.$attributeName.' Expected 1, '.count($subArray).' given.');
             }
         } else {
-            throw new AakSamlException('Missing SAML attribute: ' . $attributeName);
+            throw new AakSamlException('Missing SAML attribute: '.$attributeName);
         }
     }
 }

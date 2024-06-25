@@ -89,7 +89,8 @@ class AakSamlTeamMeta
     #[Serializer\Groups(['Default'])]
     private string $officeName;
 
-    public function __construct(Team $team, SamlDTO $samlDTO) {
+    public function __construct(Team $team, SamlDTO $samlDTO)
+    {
         $this->team = $team;
 
         $this->setValues($samlDTO);

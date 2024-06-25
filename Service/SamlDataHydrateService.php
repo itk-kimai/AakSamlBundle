@@ -10,12 +10,10 @@ use KimaiPlugin\AakSamlBundle\Repository\AakSamlTeamMetaRepository;
 
 class SamlDataHydrateService
 {
-
     public function __construct(
         private readonly TeamRepository $teamRepository,
         private readonly AakSamlTeamMetaRepository $aakSamlTeamMetaRepository,
-    )
-    {
+    ) {
     }
 
     public function hydrate(User $user, SamlDTO $samlDto): void

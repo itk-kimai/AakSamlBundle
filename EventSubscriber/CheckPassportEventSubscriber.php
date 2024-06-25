@@ -14,8 +14,7 @@ class CheckPassportEventSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private readonly SamlDataHydrateService $samlDataHydrateService
-    )
-    {
+    ) {
     }
 
     public static function getSubscribedEvents(): array
@@ -45,7 +44,5 @@ class CheckPassportEventSubscriber implements EventSubscriberInterface
                 }
             }
         }
-
-
     }
 }
