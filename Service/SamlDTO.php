@@ -77,6 +77,10 @@ class SamlDTO
     public readonly string $office;
 
     /**
+     * SamlDTO constructor.
+     *
+     * @param array $samlAttributes
+     *
      * @throws AakSamlException
      */
     public function __construct(array $samlAttributes)
@@ -93,61 +97,51 @@ class SamlDTO
         $this->subDepartment = $this->getAttributeValue(self::SUB_DEPARTMENT_ATTRIBUTE, $samlAttributes);
         $this->office = $this->getAttributeValue(self::OFFICE_ATTRIBUTE, $samlAttributes);
 
-        $ids = $this->getAttributeValue(self::ID_ARRAY_ATTRIBUTE, $samlAttributes);
-        $this->hydrateIdValues($ids);
-    }
-
-    /**
-     * Hydrate id values from id array. E.g. [1001;1004;1012;1103;6530].
-     *
-     * @param string $idValues
-     *
-     * @return void
-     *
-     * @throws AakSamlException
-     */
-    private function hydrateIdValues(string $idValues): void
-    {
-        $ids = \explode(';', $idValues);
+        // Hydrate id values from id array. E.g. [1001;1004;1012;1103;6530].
+        $ids = \explode(';', $this->getAttributeValue(self::ID_ARRAY_ATTRIBUTE, $samlAttributes));
 
         if (\count($ids) < 5) {
-            throw new AakSamlException('Unexpected number of values for SAML ids. Expected 5 or more, '.count($ids).' given.');
+            throw new AakSamlException(sprintf('Unexpected number of values for SAML ids. Expected 5 or more, %d given.', count($ids)));
         }
 
+        // Convert all array values to integer or throw AakSamlException
         \array_walk($ids, function (&$value) {
             $value = intval($value);
 
             if (0 > $value) {
-                throw new AakSamlException('Invalid id value:'.$value.' Expected a positive integer.');
+                throw new AakSamlException(sprintf('Invalid id value "%s" - Expected a positive integer.', $value));
             }
 
             if (0 === $value) {
-                throw new AakSamlException('Invalid id value:'.$value.' Cannot convert to integer.');
+                throw new AakSamlException(sprintf('Invalid id value "%s" - Cannot convert to integer.', $value));
             }
         });
 
-        $this->companyId = $ids[0];
-        $this->divisionId = $ids[1];
-        $this->departmentId = $ids[2];
-        $this->subDepartmentId = $ids[3];
-        $this->officeId = $ids[4];
+        /* @var int[] $ids */
+        $this->companyId = $ids[0]; // @phpstan-ignore assign.propertyType
+        $this->divisionId = $ids[1]; // @phpstan-ignore assign.propertyType
+        $this->departmentId = $ids[2]; // @phpstan-ignore assign.propertyType
+        $this->subDepartmentId = $ids[3]; // @phpstan-ignore assign.propertyType
+        $this->officeId = $ids[4]; // @phpstan-ignore assign.propertyType
     }
 
     /**
      * @throws AakSamlException
      */
-    private function getAttributeValue(string $attributeName, array $samlAttributes): mixed
+    private function getAttributeValue(string $attributeName, array $samlAttributes): string
     {
         if (array_key_exists($attributeName, $samlAttributes)) {
             $subArray = $samlAttributes[$attributeName];
 
             if (1 === count($subArray)) {
-                return $subArray[0];
+                $value = $subArray[0];
             } else {
-                throw new AakSamlException('Unexpected number of values for SAML attribute: '.$attributeName.' Expected 1, '.count($subArray).' given.');
+                throw new AakSamlException(sprintf('Unexpected number of values for SAML attribute: %s Expected 1, %d given.', $attributeName, count($subArray)));
             }
         } else {
-            throw new AakSamlException('Missing SAML attribute: '.$attributeName);
+            throw new AakSamlException(sprintf('Missing SAML attribute: %s', $attributeName));
         }
+
+        return $value;
     }
 }

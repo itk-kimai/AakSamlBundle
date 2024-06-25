@@ -27,7 +27,7 @@ class AakSamlTeamMeta
     #[ORM\JoinColumn(name: 'team_id', referencedColumnName: 'id', unique: true, nullable: false)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private ?Team $team;
+    private Team $team;
 
     #[ORM\Column(name: 'manager_email', type: Types::STRING, length: 255, nullable: false)]
     #[Serializer\Expose]
@@ -123,12 +123,12 @@ class AakSamlTeamMeta
         return $this->id;
     }
 
-    public function getTeam(): ?Team
+    public function getTeam(): Team
     {
         return $this->team;
     }
 
-    public function setTeam(?Team $team): void
+    public function setTeam(Team $team): void
     {
         $this->team = $team;
     }

@@ -6,6 +6,9 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Exception\ORMException;
 use KimaiPlugin\AakSamlBundle\Entity\AakSamlTeamMeta;
 
+/**
+ * @extends \Doctrine\ORM\EntityRepository<AakSamlTeamMeta>
+ */
 class AakSamlTeamMetaRepository extends EntityRepository
 {
     /**
