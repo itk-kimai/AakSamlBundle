@@ -1,7 +1,7 @@
 # itk-version: 3.2.1
 services:
   phpfpm:
-    image: itkdev/php8.1-fpm:latest
+    image: itkdev/php8.3-fpm:latest
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
