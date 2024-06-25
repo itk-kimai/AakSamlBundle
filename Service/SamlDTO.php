@@ -20,7 +20,7 @@ class SamlDTO
 
     public readonly string $azIdent;
 
-    public readonly string $name;
+    public readonly string $displayName;
 
     public readonly string $emailAddress;
 
@@ -86,7 +86,7 @@ class SamlDTO
     public function __construct(array $samlAttributes)
     {
         $this->azIdent = $this->getAttributeValue(self::AZ_IDENT_ATTRIBUTE, $samlAttributes);
-        $this->name = $this->getAttributeValue(self::NAME_ATTRIBUTE, $samlAttributes);
+        $this->displayName = $this->getAttributeValue(self::NAME_ATTRIBUTE, $samlAttributes);
         $this->emailAddress = $this->getAttributeValue(self::EMAIL_ADDRESS_ATTRIBUTE, $samlAttributes);
 
         $this->managerName = $this->getAttributeValue(self::MANAGER_NAME_ATTRIBUTE, $samlAttributes);

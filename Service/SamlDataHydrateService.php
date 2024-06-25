@@ -5,12 +5,14 @@ namespace KimaiPlugin\AakSamlBundle\Service;
 use App\Entity\Team;
 use App\Entity\User;
 use App\Repository\TeamRepository;
+use App\Repository\UserRepository;
 use KimaiPlugin\AakSamlBundle\Entity\AakSamlTeamMeta;
 use KimaiPlugin\AakSamlBundle\Repository\AakSamlTeamMetaRepository;
 
 class SamlDataHydrateService
 {
     public function __construct(
+        private readonly UserRepository $userRepository,
         private readonly TeamRepository $teamRepository,
         private readonly AakSamlTeamMetaRepository $aakSamlTeamMetaRepository,
     ) {
@@ -24,10 +26,9 @@ class SamlDataHydrateService
 
     private function hydrateUser(User $user, SamlDTO $samlDto): void
     {
-        // The SAML mapping config should map 'az -> username' and 'email'
+        // The SAML mapping config should map 'email -> username' and 'email -> email'
         // kimai/config/packages/local.yaml
         // mapping:
-        //   - { saml: $http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname, kimai: username }
         //   - { saml: $http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress, kimai: email }
 
         // Kimai "Title" field is used as "Office", E.g. "ITK Development"
@@ -35,6 +36,11 @@ class SamlDataHydrateService
 
         // Kimai "Account" ("Staff number" in the UI) field is used for azIdent
         $user->setAccountNumber($samlDto->azIdent);
+
+        // Kimai "Alias" is mapped to displayName
+        $user->setAlias($samlDto->displayName);
+
+        $this->userRepository->saveUser($user);
     }
 
     private function hydrateTeam(User $user, SamlDTO $samlDto): void
