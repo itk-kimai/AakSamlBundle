@@ -1,0 +1,48 @@
+includes:
+    - %rootDir%/../phpstan-symfony/extension.neon
+    - %rootDir%/../phpstan-symfony/rules.neon
+    - %rootDir%/../phpstan-doctrine/extension.neon
+    - %rootDir%/../phpstan-doctrine/rules.neon
+    - %rootDir%/../phpstan-strict-rules/rules.neon
+    - %rootDir%/../phpstan-deprecation-rules/rules.neon
+    - %rootDir%/../phpstan/conf/bleedingEdge.neon
+
+parameters:
+    featureToggles:
+        skipCheckGenericClasses:
+            - Symfony\Component\Form\AbstractType
+            - Symfony\Component\Form\FormInterface
+            - Symfony\Component\Form\FormTypeExtensionInterface
+            - Symfony\Component\Form\FormTypeInterface
+    level: 9
+    paths:
+        - ./
+    strictRules:
+        allRules: false
+        disallowedLooseComparison: true
+        booleansInConditions: false
+        uselessCast: true
+        requireParentConstructorCall: true
+        disallowedConstructs: false
+        overwriteVariablesWithLoop: true
+        closureUsesThis: true
+        matchingInheritedMethodNames: true
+        numericOperandsInArithmeticOperators: true
+        strictCalls: false
+        switchConditionsMatchingType: true
+        noVariableVariables: false
+    excludePaths:
+        - vendor/
+    treatPhpDocTypesAsCertain: false
+    inferPrivatePropertyTypeFromConstructor: true
+    # checkMissingIterableValueType: false
+    # checkGenericClassInNonGenericObjectType: false
+
+    ignoreErrors:
+        - identifier: missingType.iterableValue
+        # - identifier: missingType.generics
+
+
+# Local Variables:
+# mode: yaml
+# End:
