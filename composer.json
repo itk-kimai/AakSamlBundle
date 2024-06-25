@@ -1,6 +1,20 @@
 {
   "name": "itk-kimai/aak-saml-bundle",
   "description": "Bundle to handle mapping between City of Aarhus SAML claims and Kimai team structure",
+  "license": "AGPL-3.0-or-later",
+  "type": "kimai-plugin",
+  "version": "0.1",
+  "keywords": [
+    "kimai",
+    "kimai-plugin"
+  ],
+  "authors": [
+    {
+      "name": "Ture Gjørup",
+      "email": "tug@aarhus.dk",
+      "homepage": "https://itk.aarhus.dk/"
+    }
+  ],
   "homepage": "https://github.com/itk-kimai/AakSamlBundle",
   "require-dev": {
     "ergebnis/composer-normalize": "^2.43",
@@ -18,20 +32,6 @@
       "KimaiPlugin\\AakSamlBundle\\": ""
     }
   },
-  "type": "kimai-plugin",
-  "version": "0.1",
-  "keywords": [
-    "kimai",
-    "kimai-plugin"
-  ],
-  "license": "AGPL-3.0-or-later",
-  "authors": [
-    {
-      "name": "Ture Gjørup",
-      "email": "tug@aarhus.dk",
-      "homepage": "https://itk.aarhus.dk/"
-    }
-  ],
   "config": {
     "allow-plugins": {
       "ergebnis/composer-normalize": true,
@@ -45,6 +45,12 @@
       "*": "dist"
     },
     "sort-packages": true
+  },
+  "extra": {
+    "kimai": {
+      "name": "City of Aarhus AD/SAML integration",
+      "require": 21800
+    }
   },
   "scripts": {
     "code-analysis": [
@@ -73,11 +79,5 @@
     "coding-standards-check/twig-cs-fixer": [
       "twig-cs-fixer lint Resources/views"
     ]
-  },
-  "extra": {
-    "kimai": {
-      "require": 21800,
-      "name": "City of Aarhus AD/SAML integration"
-    }
   }
 }
