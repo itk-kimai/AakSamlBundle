@@ -93,7 +93,7 @@ class AakSamlClaimsLog
     }
 
     /**
-     * Calculate hash string base on SAML claims.
+     * Calculate hash string based on SAML claims.
      *
      * This hash should be used to see if claims have changed.
      *
