@@ -23,7 +23,7 @@ to ensure uniqueness. E.g. "ITK Development (6530)"
 - SAML claims -> entity fields
 
 This plugin entity maps AAK organisation values to Kimai Teams. Most claims are mapped 1:1 through a `SamlDTO` object. 
-Note that `id's` for the various "departments" are given as a list in `extensionAttribute7`, e.g. `1001;1004;1012;1103;6530`. 
+Note that `id`s for the various "departments" are given as a list in `extensionAttribute7`, e.g. `1001;1004;1012;1103;6530`. 
 These are split and handled as individual id's.
 
 - There MUST be exactly one `AakSamlTeamMeta` entity for each Kimai team created through SAML.
