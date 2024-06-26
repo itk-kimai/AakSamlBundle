@@ -1,0 +1,88 @@
+{
+  "name": "itk-kimai/aak-saml-bundle",
+  "description": "Bundle to handle mapping between City of Aarhus SAML claims and Kimai team structure",
+  "license": "AGPL-3.0-or-later",
+  "type": "kimai-plugin",
+  "keywords": [
+    "kimai",
+    "kimai-plugin"
+  ],
+  "authors": [
+    {
+      "name": "Ture Gjørup",
+      "email": "tug@aarhus.dk",
+      "homepage": "https://itk.aarhus.dk/"
+    }
+  ],
+  "homepage": "https://github.com/itk-kimai/AakSamlBundle",
+  "require-dev": {
+    "php": ">=8.3",
+    "ergebnis/composer-normalize": "^2.43",
+    "escapestudios/symfony2-coding-standard": "3.x-dev",
+    "friendsofphp/php-cs-fixer": "^3.0",
+    "kimai/kimai": "dev-main",
+    "kubawerlos/php-cs-fixer-custom-fixers": "^3.21",
+    "phpstan/phpstan": "^1.0",
+    "phpstan/phpstan-deprecation-rules": "^1.0",
+    "phpstan/phpstan-doctrine": "^1.0",
+    "phpstan/phpstan-phpunit": "^1.0",
+    "phpstan/phpstan-strict-rules": "^1.0",
+    "phpstan/phpstan-symfony": "^1.0",
+    "symfony/console": "^6.0",
+    "symfony/event-dispatcher": "^6.0",
+    "vincentlanglet/twig-cs-fixer": "^2.11"
+  },
+  "autoload": {
+    "psr-4": {
+      "KimaiPlugin\\AakSamlBundle\\": ""
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "ergebnis/composer-normalize": true,
+      "symfony/flex": false,
+      "symfony/runtime": false
+    },
+    "platform": {
+      "php": "8.3"
+    },
+    "preferred-install": {
+      "*": "dist"
+    },
+    "sort-packages": true
+  },
+  "extra": {
+    "kimai": {
+      "name": "City of Aarhus AD/SAML integration",
+      "require": 21800
+    }
+  },
+  "scripts": {
+    "code-analysis": [
+      "@code-analysis/phpstan"
+    ],
+    "code-analysis/phpstan": [
+      "phpstan analyse . --configuration=phpstan.neon --level=8"
+    ],
+    "coding-standards-apply": [
+      "@coding-standards-apply/php-cs-fixer",
+      "@coding-standards-apply/twig-cs-fixer"
+    ],
+    "coding-standards-apply/php-cs-fixer": [
+      "php-cs-fixer fix"
+    ],
+    "coding-standards-apply/twig-cs-fixer": [
+      "twig-cs-fixer lint Resources/views --fix"
+    ],
+    "coding-standards-check": [
+      "@coding-standards-check/php-cs-fixer",
+      "@coding-standards-check/twig-cs-fixer"
+    ],
+    "coding-standards-check/php-cs-fixer": [
+      "php-cs-fixer fix --dry-run --format=checkstyle"
+    ],
+    "coding-standards-check/twig-cs-fixer": [
+      "twig-cs-fixer lint Resources/views"
+    ]
+  }
+}
