@@ -10,6 +10,7 @@ class SamlDTO
     private const AZ_IDENT_ATTRIBUTE = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname';
     private const NAME_ATTRIBUTE = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
     private const EMAIL_ADDRESS_ATTRIBUTE = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
+    private const MANAGER_EMAIL_ATTRIBUTE = 'managerUPN';
     private const MANAGER_NAME_ATTRIBUTE = 'managerdisplayname';
     private const COMPANY_NAME_ATTRIBUTE = 'companyname';
     private const DIVISION_ATTRIBUTE = 'division';
@@ -24,6 +25,7 @@ class SamlDTO
 
     public readonly string $emailAddress;
 
+    public readonly string $managerEmail;
     public readonly string $managerName;
 
     /**
@@ -89,6 +91,7 @@ class SamlDTO
         $this->displayName = $this->getAttributeValue(self::NAME_ATTRIBUTE, $samlAttributes);
         $this->emailAddress = $this->getAttributeValue(self::EMAIL_ADDRESS_ATTRIBUTE, $samlAttributes);
 
+        $this->managerEmail = $this->getAttributeValue(self::MANAGER_EMAIL_ATTRIBUTE, $samlAttributes);
         $this->managerName = $this->getAttributeValue(self::MANAGER_NAME_ATTRIBUTE, $samlAttributes);
 
         $this->company = $this->getAttributeValue(self::COMPANY_NAME_ATTRIBUTE, $samlAttributes);
