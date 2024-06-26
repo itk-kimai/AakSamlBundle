@@ -5,6 +5,7 @@ namespace KimaiPlugin\AakSamlBundle\EventSubscriber;
 use App\Entity\User;
 use App\Saml\SamlBadge;
 use KimaiPlugin\AakSamlBundle\Exception\AakSamlException;
+use KimaiPlugin\AakSamlBundle\Service\SamlClaimsLogger;
 use KimaiPlugin\AakSamlBundle\Service\SamlDataHydrateService;
 use KimaiPlugin\AakSamlBundle\Service\SamlDTO;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -13,7 +14,8 @@ use Symfony\Component\Security\Http\Event\CheckPassportEvent;
 class CheckPassportEventSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly SamlDataHydrateService $samlDataHydrateService
+        private readonly SamlDataHydrateService $samlDataHydrateService,
+        private readonly SamlClaimsLogger $samlClaimsLogger,
     ) {
     }
 
@@ -36,11 +38,18 @@ class CheckPassportEventSubscriber implements EventSubscriberInterface
                 $samlAttributes = $badge->getSamlLoginAttributes()->getAttributes();
                 $user = $passport->getUser();
 
-                // Throws AakSamlException on invalid data
-                $samlDto = new SamlDTO($samlAttributes);
+                try {
+                    // Throws AakSamlException on invalid data
+                    $samlDto = new SamlDTO($samlAttributes);
 
-                if ($user instanceof User) {
-                    $this->samlDataHydrateService->hydrate($user, $samlDto);
+                    if ($user instanceof User) {
+                        $this->samlDataHydrateService->hydrate($user, $samlDto);
+                        $this->samlClaimsLogger->logClaims($user, true, $samlAttributes, null);
+                    }
+                } catch (\Exception $e) {
+                    $this->samlClaimsLogger->logClaims($user, false, $samlAttributes, $e);
+
+                    throw $e;
                 }
             }
         }

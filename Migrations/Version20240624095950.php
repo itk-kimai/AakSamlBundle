@@ -44,20 +44,11 @@ final class Version20240624095950 extends AbstractMigration
           kimai2_aak_saml_team_meta
         ADD
           CONSTRAINT FK_964F38A296CD8AE FOREIGN KEY (team_id) REFERENCES kimai2_teams (id)');
-
-        $this->addSql('DROP TABLE migration_versions');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE migration_versions (
-          version VARCHAR(191) CHARACTER SET utf8mb3 NOT NULL COLLATE `utf8mb3_unicode_ci`,
-          executed_at DATETIME DEFAULT NULL,
-          execution_time INT DEFAULT NULL,
-          PRIMARY KEY(version)
-        ) DEFAULT CHARACTER SET utf8mb3 COLLATE `utf8mb3_unicode_ci` ENGINE = InnoDB COMMENT = \'\'');
-
         $this->addSql('ALTER TABLE kimai2_aak_saml_team_meta DROP FOREIGN KEY FK_964F38A296CD8AE');
 
         $this->addSql('DROP TABLE kimai2_aak_saml_team_meta');
