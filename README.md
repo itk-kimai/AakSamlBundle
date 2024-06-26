@@ -10,7 +10,7 @@ When a user logs in the following is created or updated. This is done by listeni
 which in turn delegates the heavy lifting to `KimaiPlugin\AakSamlBundle\Service\SamlDataHydrateService`.
 
 ### `App\Entity\Team`
-- Office (`officeId`) -> `name`
+- `Office (officeId)` -> `name`
 
 We map `Office` (e.g. "ITK Development") to a Kimai team. Kimai has a unique constraint on team names. We include the id
 to ensure uniqueness. E.g. "ITK Development (6530)"
@@ -19,7 +19,7 @@ to ensure uniqueness. E.g. "ITK Development (6530)"
 - The team lead MUST be the user with email matching the `managerUPN` SAML claim.
 
 ### `KimaiPlugin\AakSamlBundle\Entity\AakSamlTeamMeta`
-- Office -> `team`
+- `Office` -> `team`
 - SAML claims -> entity fields
 
 This plugin entity maps AAK organisation values to Kimai Teams. Most claims are mapped 1:1 through a `SamlDTO` object. 
@@ -30,9 +30,9 @@ These are split and handled as individual IDs.
 - The `AakSamlTeamMeta` entity MUST be updated with SAML claims on each login.
 
 ### `App\Entity\User` (Team Lead)
-- managerUPN -> `username`
-- managerUPN -> `email`
-- managerdisplayname -> `alias`
+- `managerUPN` -> `username`
+- `managerUPN` -> `email`
+- `managerdisplayname` -> `alias`
 
 A user is created/updated for the manager. The user is added as "Team Lead" to the `Team` and given the `ROLE_TEAMLEAD`.
 If the `Team` have other team leads they are removed to handle situations where the manager changes.
@@ -41,11 +41,11 @@ If the `Team` have other team leads they are removed to handle situations where 
 - Any team leads removed from the team MUST have `ROLE_TEAMLEAD` removed UNLESS they are team leads for other teams.
 
 ### `App\Entity\User` (User)
-- "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" -> `username`
-- "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" -> `email`
-- "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" -> `alias` 
-- "Office" -> `title` (Kimai "title" field renamed in the UI)
-- "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname" (az) -> `account number` ("Staff number" in the UI)
+- `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress` -> `username`
+- `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress` -> `email`
+- `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name` -> `alias` 
+- `Office` -> `title` (Kimai "title" field renamed in the UI)
+- `http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname (az)` -> `account number` ("Staff number" in the UI)
 - TeamLead User -> `supervisor`
 
 Kimai's SAML integration handles creating/finding the User logging in. We only ensure that claims and team are 
