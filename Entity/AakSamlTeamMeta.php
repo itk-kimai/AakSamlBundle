@@ -98,8 +98,7 @@ class AakSamlTeamMeta
 
     public function setValues(SamlDTO $samlDTO): void
     {
-        // @Todo: Missing claim
-        $this->managerEmail = 'dummy_manager_email';
+        $this->managerEmail = $samlDTO->managerEmail;
         $this->managerName = $samlDTO->managerName;
 
         $this->companyId = $samlDTO->companyId;
