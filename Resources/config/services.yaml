@@ -9,6 +9,11 @@ services:
     resource: '../../*'
     exclude: '../../{Resources}'
 
+  KimaiPlugin\AakSamlBundle\Repository\AakSamlClaimsLogRepository:
+    class:     Doctrine\ORM\EntityRepository
+    factory:   ['@doctrine.orm.entity_manager', getRepository]
+    arguments: ['KimaiPlugin\AakSamlBundle\Entity\AakSamlClaimsLog']
+
   KimaiPlugin\AakSamlBundle\Repository\AakSamlTeamMetaRepository:
     class:     Doctrine\ORM\EntityRepository
     factory:   ['@doctrine.orm.entity_manager', getRepository]
