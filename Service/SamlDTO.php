@@ -160,7 +160,6 @@ class SamlDTO
         $id = array_slice($this->departmentIds, -1, 1);
 
         return $id[0];
-
     }
 
     /**
