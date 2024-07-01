@@ -29,54 +29,59 @@ class SamlDTO
     public readonly string $managerName;
 
     /**
-     * @var int "Kommune" id, E.g "1001"
+     * @var ?int "Kommune" id, E.g "1001"
      */
-    public readonly int $companyId;
+    public readonly ?int $companyId;
 
     /**
-     * @var string "Kommune" name, E.g. "Aarhus Kommune"
+     * @var ?string "Kommune" name, E.g. "Aarhus Kommune"
      */
-    public readonly string $company;
+    public readonly ?string $company;
 
     /**
-     * @var int "Magistrat" id, E.g. "1004"
+     * @var ?int "Magistrat" id, E.g. "1004"
      */
-    public readonly int $divisionId;
+    public readonly ?int $divisionId;
 
     /**
-     * @var string "Magistrat" name, E.g. "Kultur og Borgerservice"
+     * @var ?string "Magistrat" name, E.g. "Kultur og Borgerservice"
      */
-    public readonly string $division;
+    public readonly ?string $division;
 
     /**
-     * @var int "Afdelings" id, E.g. "1012"
+     * @var ?int "Afdelings" id, E.g. "1012"
      */
-    public readonly int $departmentId;
+    public readonly ?int $departmentId;
 
     /**
-     * @var string "Afdelings" name, E.g. "Kultur og Borgerservice"
+     * @var ?string "Afdelings" name, E.g. "Kultur og Borgerservice"
      */
-    public readonly string $department;
+    public readonly ?string $department;
 
     /**
-     * @var int "Under afdelings" id, E.g. "1103"
+     * @var ?int "Under afdelings" id, E.g. "1103"
      */
-    public readonly int $subDepartmentId;
+    public readonly ?int $subDepartmentId;
 
     /**
-     * @var string "Under afdelings" name, E.g. "ITK"
+     * @var ?string "Under afdelings" name, E.g. "ITK"
      */
-    public readonly string $subDepartment;
+    public readonly ?string $subDepartment;
 
     /**
-     * @var int "Office" id, E.g. "6530"
+     * @var ?int "Office" id, E.g. "6530"
      */
-    public readonly int $officeId;
+    public readonly ?int $officeId;
 
     /**
-     * @var string "Office" name, E.g. "ITK Development"
+     * @var ?string "Office" name, E.g. "ITK Development"
      */
-    public readonly string $office;
+    public readonly ?string $office;
+
+    /**
+     * @var array<int> of hierarchical organization id's going top to bottom
+     */
+    public readonly array $departmentIds;
 
     /**
      * SamlDTO constructor.
@@ -103,13 +108,10 @@ class SamlDTO
         // Hydrate id values from id array. E.g. [1001;1004;1012;1103;6530].
         $ids = \explode(';', $this->getAttributeValue(self::ID_ARRAY_ATTRIBUTE, $samlAttributes));
 
-        if (\count($ids) < 5) {
-            throw new AakSamlException(sprintf('Unexpected number of values for SAML ids. Expected 5 or more, %d given.', count($ids)));
-        }
-
         // Convert all array values to integer or throw AakSamlException
-        \array_walk($ids, function (&$value) {
-            $value = intval($value);
+        $departmentIds = [];
+        foreach ($ids as $id) {
+            $value = intval($id);
 
             if (0 > $value) {
                 throw new AakSamlException(sprintf('Invalid id value "%s" - Expected a positive integer.', $value));
@@ -118,14 +120,161 @@ class SamlDTO
             if (0 === $value) {
                 throw new AakSamlException(sprintf('Invalid id value "%s" - Cannot convert to integer.', $value));
             }
-        });
 
-        /* @var int[] $ids */
-        $this->companyId = $ids[0]; // @phpstan-ignore assign.propertyType
-        $this->divisionId = $ids[1]; // @phpstan-ignore assign.propertyType
-        $this->departmentId = $ids[2]; // @phpstan-ignore assign.propertyType
-        $this->subDepartmentId = $ids[3]; // @phpstan-ignore assign.propertyType
-        $this->officeId = $ids[4]; // @phpstan-ignore assign.propertyType
+            $departmentIds[] = $value;
+        }
+
+        $this->departmentIds = $departmentIds;
+
+        if (0 === count($this->departmentIds)) {
+            throw new AakSamlException(sprintf('No organization ids given in claims: "%s"', $this->getAttributeValue(self::ID_ARRAY_ATTRIBUTE, $samlAttributes)));
+        }
+
+        // We can map claims from level 1-5. If we see id's for deeper levels we don't know the corresponding claim for
+        // department name.
+        $this->companyId = $this->departmentIds[0];
+        $this->divisionId = $this->departmentIds[1] ?? null;
+        $this->departmentId = $this->departmentIds[2] ?? null;
+        $this->subDepartmentId = $this->departmentIds[3] ?? null;
+        $this->officeId = $this->departmentIds[4] ?? null;
+    }
+
+    /**
+     * Is the user a team lead.
+     *
+     * @return bool
+     */
+    public function isTeamLead(): bool
+    {
+        // If claims list the user as their own manager they are team lead for the lowest org unit given in the id's
+        return $this->emailAddress === $this->managerEmail;
+    }
+
+    /**
+     * Get the organization id. This will be the last of the ids given in the claims.
+     *
+     * @return int
+     */
+    public function getOrganizationUnitId(): int
+    {
+        $id = array_slice($this->departmentIds, -1, 1);
+
+        return $id[0];
+    }
+
+    /**
+     * Get the organization name the user is placed in. For levels 1-5 we know the claim to map to. For deeper levels
+     * the claims are unknown.
+     *
+     * @return string
+     */
+    public function getOrganizationUnitName(): string
+    {
+        $depth = \count($this->departmentIds);
+
+        return $this->getOrgUnitName($depth);
+    }
+
+    /**
+     * Get the organization id the user is a member in. This will be the last of the ids given in the claims for
+     * employees and the second to last for team leads.
+     *
+     * @return int
+     *
+     * @throws AakSamlException
+     */
+    public function getMemberOrganizationUnitId(): int
+    {
+        if ($this->isTeamLead()) {
+            $id = array_slice($this->departmentIds, -2, 1);
+        } else {
+            $id = array_slice($this->departmentIds, -1, 1);
+        }
+
+        if (1 !== count($id)) {
+            throw new AakSamlException('Cannot determine organization id from id (extensionAttribute7) array.');
+        }
+
+        return $id[0];
+    }
+
+    /**
+     * Get the organization name the user is a member in. For team leads this is the second last org claim.
+     *
+     * @return string
+     */
+    public function getMemberOrganizationUnitName(): string
+    {
+        $depth = \count($this->departmentIds);
+
+        if ($this->isTeamLead()) {
+            --$depth;
+        }
+
+        return $this->getOrgUnitName($depth);
+    }
+
+    /**
+     * Get the organization id the user is a team lead in. This will be the last of the ids given in the claims.
+     *
+     * @return int
+     *
+     * @throws AakSamlException
+     */
+    public function getTeamLeadOrganizationUnitId(): int
+    {
+        if (!$this->isTeamLead()) {
+            throw new AakSamlException('Cannot get team lead org from none team lead user.');
+        }
+
+        $id = array_slice($this->departmentIds, -1, 1);
+
+        if (1 !== count($id)) {
+            throw new AakSamlException('Cannot determine organization id from id (extensionAttribute7) array.');
+        }
+
+        return $id[0];
+    }
+
+    /**
+     * Get the organization name the user is team lead for. For levels 1-5 we know the claim to map to. For deeper levels
+     * the claims are unknown.
+     *
+     * @return string
+     *
+     * @throws AakSamlException
+     */
+    public function getTeamLeadOrganizationUnitName(): string
+    {
+        if (!$this->isTeamLead()) {
+            throw new AakSamlException('Cannot get team lead org from none team lead user.');
+        }
+
+        $depth = \count($this->departmentIds);
+
+        return $this->getOrgUnitName($depth);
+    }
+
+    /**
+     * Get the organization name the user is placed in. For levels 1-5 we know the claim to map to. For deeper levels
+     * the claims are unknown.
+     *
+     * @param int $depth
+     *
+     * @return string
+     */
+    private function getOrgUnitName(int $depth): string
+    {
+        $name = match ($depth) {
+            1 => $this->company,
+            2 => $this->division,
+            3 => $this->department,
+            4 => $this->subDepartment,
+            5 => $this->office,
+            default => ''
+        };
+
+        return $name ?? '';
     }
 
     /**
