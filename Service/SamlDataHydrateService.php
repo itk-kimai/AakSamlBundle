@@ -6,7 +6,10 @@ use App\Entity\Team;
 use App\Entity\User;
 use App\Repository\TeamRepository;
 use App\User\UserService;
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use KimaiPlugin\AakSamlBundle\Entity\AakSamlTeamMeta;
+use KimaiPlugin\AakSamlBundle\Exception\AakSamlException;
 use KimaiPlugin\AakSamlBundle\Repository\AakSamlTeamMetaRepository;
 
 class SamlDataHydrateService
@@ -18,22 +21,42 @@ class SamlDataHydrateService
     ) {
     }
 
+    /**
+     * @throws AakSamlException
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
     public function hydrate(User $user, SamlDTO $samlDto): void
     {
-        $team = $this->hydrateTeam($user, $samlDto);
-        $teamLead = $this->hydrateTeamLead($team, $samlDto);
-        $this->hydrateUser($user, $samlDto, $teamLead, $team);
+        $orgUnitId = $samlDto->getMemberOrganizationUnitId();
+        $orgUnitName = $samlDto->getMemberOrganizationUnitName();
+
+        $memberTeam = $this->hydrateTeam($orgUnitName, $orgUnitId, $samlDto);
+
+        if ($samlDto->isTeamLead()) {
+            $teamLead = $user;
+
+            $teamLeadTeamId = $samlDto->getTeamLeadOrganizationUnitId();
+            $teamLeadTeamName = $samlDto->getTeamLeadOrganizationUnitName();
+            $teamLeadTeam = $this->hydrateTeam($teamLeadTeamName, $teamLeadTeamId, $samlDto);
+
+            $this->hydrateTeamLeadForTeam($teamLeadTeam, $user);
+        } else {
+            $teamLead = $this->hydrateTeamLead($memberTeam, $samlDto);
+        }
+
+        $this->hydrateUser($user, $samlDto, $teamLead, $memberTeam);
     }
 
-    private function hydrateUser(User $user, SamlDTO $samlDto, User $teamLead, Team $team): void
+    private function hydrateUser(User $user, SamlDTO $samlDto, User $teamLead, Team $memberTeam): void
     {
         // The SAML mapping config should map 'email -> username' and 'email -> email'
         // kimai/config/packages/local.yaml
         // mapping:
         //   - { saml: $http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress, kimai: email }
 
-        // Kimai "Title" field is used as "Office", E.g. "ITK Development"
-        $user->setTitle($samlDto->office);
+        // Kimai "Title" field is used as "Org Unit", E.g. "ITK Development"
+        $user->setTitle($samlDto->getOrganizationUnitName());
 
         // Kimai "Account" ("Staff number" in the UI) field is used for azIdent
         $user->setAccountNumber($samlDto->azIdent);
@@ -42,41 +65,49 @@ class SamlDataHydrateService
         $user->setAlias($samlDto->displayName);
 
         // Kimai "Supervisor" is mapped to manager
-        $user->setSupervisor($teamLead);
+        // In the claims a manager is their own manager, so we have no data to map
+        if ($user->getUserIdentifier() !== $teamLead->getUserIdentifier()) {
+            $user->setSupervisor($teamLead);
+        }
 
         // Clean up any past team memberships. A user should only be a private member of one team.
         foreach ($user->getMemberships() as $membership) {
-            if (!$membership->isTeamlead() && $membership->getTeam()?->getId() !== $team->getId()) {
+            if (!$membership->isTeamlead() && $membership->getTeam()?->getId() !== $memberTeam->getId()) {
                 $user->removeMembership($membership);
             }
         }
 
         // Add current team to user (method handles the user already member case)
-        $user->addTeam($team);
+        $user->addTeam($memberTeam);
 
         $this->userService->updateUser($user);
     }
 
-    private function hydrateTeam(User $user, SamlDTO $samlDto): Team
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
+    private function hydrateTeam(string $name, int $orgUnitId, SamlDTO $samlDto): Team
     {
         /** @var AakSamlTeamMeta $aakSamlTeamMeta */
-        $aakSamlTeamMeta = $this->aakSamlTeamMetaRepository->findOneBy(['officeId' => $samlDto->officeId]);
+        $aakSamlTeamMeta = $this->aakSamlTeamMetaRepository->findOneBy(['orgUnitId' => $orgUnitId]);
 
         // Kimai has a unique constraint on team names. We include the id to ensure uniqueness.
-        $teamName = sprintf('%s (%d)', $samlDto->office, $samlDto->officeId);
+        $teamName = sprintf('%s (%d)', $name, $orgUnitId);
+        $teamName = \trim($teamName);
 
         if (null === $aakSamlTeamMeta) {
             $team = new Team(name: $teamName);
             $this->teamRepository->saveTeam($team);
 
-            $aakSamlTeamMeta = new AakSamlTeamMeta($team, $samlDto);
+            $aakSamlTeamMeta = new AakSamlTeamMeta($team, $samlDto, $orgUnitId);
             $aakSamlTeamMeta->setTeam($team);
         } else {
             $team = $aakSamlTeamMeta->getTeam();
             $team->setName($teamName);
         }
 
-        $aakSamlTeamMeta->setValues($samlDto);
+        $aakSamlTeamMeta->setValues($samlDto, $orgUnitId);
 
         $this->teamRepository->saveTeam($team);
         $this->aakSamlTeamMetaRepository->saveAakSamlTeamMeta($aakSamlTeamMeta);
@@ -84,8 +115,15 @@ class SamlDataHydrateService
         return $team;
     }
 
+    /**
+     * @throws AakSamlException
+     */
     private function hydrateTeamLead(Team $team, SamlDTO $samlDto): User
     {
+        if ($samlDto->isTeamLead()) {
+            throw new AakSamlException(sprintf('Cannot hydrate team lead for user %s. User email and manager email er the same', $samlDto->emailAddress));
+        }
+
         $teamLeadUser = $this->userService->findUserByEmail($samlDto->managerEmail);
 
         if (null === $teamLeadUser) {
@@ -99,13 +137,14 @@ class SamlDataHydrateService
             $this->userService->updateUser($teamLeadUser);
         }
 
-        $this->hydrateTeamLeadsForTeam($team, $teamLeadUser);
-        $this->teamRepository->saveTeam($team);
-
         return $teamLeadUser;
     }
 
-    private function hydrateTeamLeadsForTeam(Team $team, User $teamLeadUser): void
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     */
+    public function hydrateTeamLeadForTeam(Team $team, User $teamLeadUser): void
     {
         // Remove past team leads (if any)
         foreach ($team->getTeamleads() as $teamLead) {
@@ -121,6 +160,8 @@ class SamlDataHydrateService
 
         // Add current team lead (method handles the user already team lead case)
         $team->addTeamlead($teamLeadUser);
+
+        $this->teamRepository->saveTeam($team);
     }
 
     private function setTeamLeadValues(User $teamLeadUser, SamlDTO $samlDto): void
