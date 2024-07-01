@@ -132,11 +132,11 @@ class SamlDTO
 
         // We can map claims from level 1-5. If we see id's for deeper levels we don't know the corresponding claim for
         // department name.
-        $this->companyId = array_key_exists(0, $this->departmentIds) ? $this->departmentIds[0] : null;
-        $this->divisionId = array_key_exists(1, $this->departmentIds) ? $this->departmentIds[1] : null;
-        $this->departmentId = array_key_exists(2, $this->departmentIds) ? $this->departmentIds[2] : null;
-        $this->subDepartmentId = array_key_exists(3, $this->departmentIds) ? $this->departmentIds[3] : null;
-        $this->officeId = array_key_exists(4, $this->departmentIds) ? $this->departmentIds[4] : null;
+        $this->companyId = $this->departmentIds[0] ?? null;
+        $this->divisionId = $this->departmentIds[1] ?? null;
+        $this->departmentId = $this->departmentIds[2] ?? null;
+        $this->subDepartmentId = $this->departmentIds[3] ?? null;
+        $this->officeId = $this->departmentIds[4] ?? null;
     }
 
     /**
