@@ -157,9 +157,7 @@ class SamlDTO
      */
     public function getOrganizationUnitId(): int
     {
-        $id = array_slice($this->departmentIds, -1, 1);
-
-        return $id[0];
+        return end($this->departmentIds);
     }
 
     /**
