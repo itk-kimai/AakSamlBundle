@@ -10,7 +10,7 @@ use KimaiPlugin\AakSamlBundle\Repository\AakSamlTeamMetaRepository;
 use KimaiPlugin\AakSamlBundle\Service\SamlDTO;
 
 #[ORM\Table(name: 'kimai2_aak_saml_team_meta')]
-#[ORM\UniqueConstraint(columns: ['office_id'])]
+#[ORM\UniqueConstraint(columns: ['org_unit_id'])]
 #[ORM\Entity(repositoryClass: AakSamlTeamMetaRepository::class)]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 #[Serializer\ExclusionPolicy('all')]
@@ -29,6 +29,11 @@ class AakSamlTeamMeta
     #[Serializer\Groups(['Default'])]
     private Team $team;
 
+    #[ORM\Column(name: 'org_unit_id', type: Types::INTEGER, nullable: false)]
+    #[Serializer\Expose]
+    #[Serializer\Groups(['Default'])]
+    private int $orgUnitId;
+
     #[ORM\Column(name: 'manager_email', type: Types::STRING, length: 255, nullable: false)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
@@ -39,82 +44,102 @@ class AakSamlTeamMeta
     #[Serializer\Groups(['Default'])]
     private string $managerName;
 
-    #[ORM\Column(name: 'company_id', type: Types::INTEGER)]
+    #[ORM\Column(name: 'company_id', type: Types::INTEGER, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private int $companyId;
+    private ?int $companyId;
 
-    #[ORM\Column(name: 'company_name', type: Types::STRING, length: 255)]
+    #[ORM\Column(name: 'company_name', type: Types::STRING, length: 255, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private string $companyName;
+    private ?string $companyName;
 
-    #[ORM\Column(name: 'division_id', type: Types::INTEGER)]
+    #[ORM\Column(name: 'division_id', type: Types::INTEGER, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private int $divisionId;
+    private ?int $divisionId;
 
-    #[ORM\Column(name: 'division_name', type: Types::STRING, length: 255)]
+    #[ORM\Column(name: 'division_name', type: Types::STRING, length: 255, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private string $divisionName;
+    private ?string $divisionName;
 
-    #[ORM\Column(name: 'dept_id', type: Types::INTEGER)]
+    #[ORM\Column(name: 'dept_id', type: Types::INTEGER, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private int $departmentId;
+    private ?int $departmentId;
 
-    #[ORM\Column(name: 'dept_name', type: Types::STRING, length: 255)]
+    #[ORM\Column(name: 'dept_name', type: Types::STRING, length: 255, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private string $departmentName;
+    private ?string $departmentName;
 
-    #[ORM\Column(name: 'sub_dept_id', type: Types::INTEGER)]
+    #[ORM\Column(name: 'sub_dept_id', type: Types::INTEGER, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private int $subDepartmentId;
+    private ?int $subDepartmentId;
 
-    #[ORM\Column(name: 'sub_dept_name', type: Types::STRING, length: 255)]
+    #[ORM\Column(name: 'sub_dept_name', type: Types::STRING, length: 255, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private string $subDepartmentName;
+    private ?string $subDepartmentName;
 
-    #[ORM\Column(name: 'office_id', type: Types::INTEGER)]
+    #[ORM\Column(name: 'office_id', type: Types::INTEGER, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private int $officeId;
+    private ?int $officeId;
 
-    #[ORM\Column(name: 'office_name', type: Types::STRING, length: 255)]
+    #[ORM\Column(name: 'office_name', type: Types::STRING, length: 255, nullable: true)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
-    private string $officeName;
+    private ?string $officeName;
 
-    public function __construct(Team $team, SamlDTO $samlDTO)
+    #[ORM\Column(name: 'dept_ids', type: Types::JSON, nullable: false)]
+    #[Serializer\Expose]
+    #[Serializer\Groups(['Default'])]
+    private array $departmentIds = [];
+
+    public function __construct(Team $team, SamlDTO $samlDTO, int $orgUnitId)
     {
         $this->team = $team;
 
-        $this->setValues($samlDTO);
+        $this->setValues($samlDTO, $orgUnitId);
     }
 
-    public function setValues(SamlDTO $samlDTO): void
+    public function setValues(SamlDTO $samlDTO, int $orgUnitId): void
     {
+        $this->orgUnitId = $orgUnitId;
+        $this->departmentIds = $samlDTO->departmentIds;
+
         $this->managerEmail = $samlDTO->managerEmail;
         $this->managerName = $samlDTO->managerName;
+
+        // If we are hydrating the "member" team for a team lead we don't hydrate the lowest department level.
+        // Get the "depth" to go to by finding the position of "$orgUnitId" in the $departmentIds.
+        $depth = array_search($orgUnitId, $this->departmentIds);
 
         $this->companyId = $samlDTO->companyId;
         $this->companyName = $samlDTO->company;
 
-        $this->divisionId = $samlDTO->divisionId;
-        $this->divisionName = $samlDTO->division;
+        if ($depth >= 1) {
+            $this->divisionId = $samlDTO->divisionId;
+            $this->divisionName = $samlDTO->division;
+        }
 
-        $this->departmentId = $samlDTO->departmentId;
-        $this->departmentName = $samlDTO->department;
+        if ($depth >= 2) {
+            $this->departmentId = $samlDTO->departmentId;
+            $this->departmentName = $samlDTO->department;
+        }
 
-        $this->subDepartmentId = $samlDTO->subDepartmentId;
-        $this->subDepartmentName = $samlDTO->subDepartment;
+        if ($depth >= 3) {
+            $this->subDepartmentId = $samlDTO->subDepartmentId;
+            $this->subDepartmentName = $samlDTO->subDepartment;
+        }
 
-        $this->officeId = $samlDTO->officeId;
-        $this->officeName = $samlDTO->office;
+        if ($depth >= 4) {
+            $this->officeId = $samlDTO->officeId;
+            $this->officeName = $samlDTO->office;
+        }
     }
 
     public function getId(): int
@@ -152,103 +177,123 @@ class AakSamlTeamMeta
         $this->managerName = $managerName;
     }
 
-    public function getCompanyId(): int
+    public function getCompanyId(): ?int
     {
         return $this->companyId;
     }
 
-    public function setCompanyId(int $companyId): void
+    public function setCompanyId(?int $companyId): void
     {
         $this->companyId = $companyId;
     }
 
-    public function getCompanyName(): string
+    public function getCompanyName(): ?string
     {
         return $this->companyName;
     }
 
-    public function setCompanyName(string $companyName): void
+    public function setCompanyName(?string $companyName): void
     {
         $this->companyName = $companyName;
     }
 
-    public function getDivisionId(): int
+    public function getDivisionId(): ?int
     {
         return $this->divisionId;
     }
 
-    public function setDivisionId(int $divisionId): void
+    public function setDivisionId(?int $divisionId): void
     {
         $this->divisionId = $divisionId;
     }
 
-    public function getDivisionName(): string
+    public function getDivisionName(): ?string
     {
         return $this->divisionName;
     }
 
-    public function setDivisionName(string $divisionName): void
+    public function setDivisionName(?string $divisionName): void
     {
         $this->divisionName = $divisionName;
     }
 
-    public function getDepartmentId(): int
+    public function getDepartmentId(): ?int
     {
         return $this->departmentId;
     }
 
-    public function setDepartmentId(int $departmentId): void
+    public function setDepartmentId(?int $departmentId): void
     {
         $this->departmentId = $departmentId;
     }
 
-    public function getDepartmentName(): string
+    public function getDepartmentName(): ?string
     {
         return $this->departmentName;
     }
 
-    public function setDepartmentName(string $departmentName): void
+    public function setDepartmentName(?string $departmentName): void
     {
         $this->departmentName = $departmentName;
     }
 
-    public function getSubDepartmentId(): int
+    public function getSubDepartmentId(): ?int
     {
         return $this->subDepartmentId;
     }
 
-    public function setSubDepartmentId(int $subDepartmentId): void
+    public function setSubDepartmentId(?int $subDepartmentId): void
     {
         $this->subDepartmentId = $subDepartmentId;
     }
 
-    public function getSubDepartmentName(): string
+    public function getSubDepartmentName(): ?string
     {
         return $this->subDepartmentName;
     }
 
-    public function setSubDepartmentName(string $subDepartmentName): void
+    public function setSubDepartmentName(?string $subDepartmentName): void
     {
         $this->subDepartmentName = $subDepartmentName;
     }
 
-    public function getOfficeId(): int
+    public function getOfficeId(): ?int
     {
         return $this->officeId;
     }
 
-    public function setOfficeId(int $officeId): void
+    public function setOfficeId(?int $officeId): void
     {
         $this->officeId = $officeId;
     }
 
-    public function getOfficeName(): string
+    public function getOfficeName(): ?string
     {
         return $this->officeName;
     }
 
-    public function setOfficeName(string $officeName): void
+    public function setOfficeName(?string $officeName): void
     {
         $this->officeName = $officeName;
+    }
+
+    public function getDepartmentIds(): array
+    {
+        return $this->departmentIds;
+    }
+
+    public function setDepartmentIds(array $departmentIds): void
+    {
+        $this->departmentIds = $departmentIds;
+    }
+
+    public function getOrgUnitId(): int
+    {
+        return $this->orgUnitId;
+    }
+
+    public function setOrgUnitId(int $orgUnitId): void
+    {
+        $this->orgUnitId = $orgUnitId;
     }
 }
