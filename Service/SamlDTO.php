@@ -132,7 +132,7 @@ class SamlDTO
 
         // We can map claims from level 1-5. If we see id's for deeper levels we don't know the corresponding claim for
         // department name.
-        $this->companyId = $this->departmentIds[0] ?? null;
+        $this->companyId = $this->departmentIds[0];
         $this->divisionId = $this->departmentIds[1] ?? null;
         $this->departmentId = $this->departmentIds[2] ?? null;
         $this->subDepartmentId = $this->departmentIds[3] ?? null;
@@ -157,7 +157,10 @@ class SamlDTO
      */
     public function getOrganizationUnitId(): int
     {
-        return end($this->departmentIds);
+        $id = array_slice($this->departmentIds, -1, 1);
+
+        return $id[0];
+
     }
 
     /**
