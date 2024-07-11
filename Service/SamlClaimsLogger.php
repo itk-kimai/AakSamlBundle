@@ -13,6 +13,17 @@ class SamlClaimsLogger
     ) {
     }
 
+    /**
+     * @param UserInterface $user
+     * @param bool $success
+     * @param array<string, array<int, string>> $claims
+     * @param \Exception|null $exception
+     *
+     * @return void
+     *
+     * @throws \Doctrine\ORM\Exception\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
     public function logClaims(UserInterface $user, bool $success, array $claims, ?\Exception $exception = null): void
     {
         unset($claims['sessionIndex']);

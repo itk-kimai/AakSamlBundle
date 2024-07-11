@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Adapt SAML login to `personaleLeder***` claims
+
 ## 1.0.0 - 2024-06-26
 
 - Plugin setup

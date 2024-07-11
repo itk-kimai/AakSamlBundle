@@ -57,7 +57,8 @@ class AakSamlClaimsLog
         $this->loginSuccess = $succes;
         $this->claims = $claims;
         $this->claimsHash = $this->calculateHash($claims);
-        $this->exceptionMessage = $exception?->getMessage();
+
+        $this->exceptionMessage = null === $exception ? null : \mb_substr($exception->getMessage(), 255);
 
         $this->loggedAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
     }
@@ -90,6 +91,11 @@ class AakSamlClaimsLog
     public function isLoginSuccess(): bool
     {
         return $this->loginSuccess;
+    }
+
+    public function getExceptionMessage(): ?string
+    {
+        return $this->exceptionMessage;
     }
 
     /**
