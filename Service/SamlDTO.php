@@ -10,14 +10,16 @@ class SamlDTO
     private const AZ_IDENT_ATTRIBUTE = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname';
     private const NAME_ATTRIBUTE = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
     private const EMAIL_ADDRESS_ATTRIBUTE = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
-    private const MANAGER_EMAIL_ATTRIBUTE = 'managerUPN';
-    private const MANAGER_NAME_ATTRIBUTE = 'managerdisplayname';
+    private const MANAGER_EMAIL_ATTRIBUTE = 'personaleLederUPN';
+    private const MANAGER_NAME_ATTRIBUTE = 'personaleLederDisplayName';
     private const COMPANY_NAME_ATTRIBUTE = 'companyname';
     private const DIVISION_ATTRIBUTE = 'division';
     private const DEPARTMENT_ATTRIBUTE = 'department';
     private const SUB_DEPARTMENT_ATTRIBUTE = 'extensionAttribute12';
     private const OFFICE_ATTRIBUTE = 'Office';
     private const ID_ARRAY_ATTRIBUTE = 'extensionAttribute7';
+
+    private const EMPLOYEE_LIST_ATTRIBUTE = 'employeeList';
 
     public readonly string $azIdent;
 
@@ -84,6 +86,11 @@ class SamlDTO
     public readonly array $departmentIds;
 
     /**
+     * @var array<string, int> og emails for managers employees. Empty for non-managers.
+     */
+    public readonly array $employeeList;
+
+    /**
      * SamlDTO constructor.
      *
      * @param array $samlAttributes
@@ -137,6 +144,9 @@ class SamlDTO
         $this->departmentId = $this->departmentIds[2] ?? null;
         $this->subDepartmentId = $this->departmentIds[3] ?? null;
         $this->officeId = $this->departmentIds[4] ?? null;
+
+        $employeeEmailArray = \explode(';', $this->getAttributeValue(self::EMPLOYEE_LIST_ATTRIBUTE, $samlAttributes));
+        $this->employeeList = \array_flip(\array_filter($employeeEmailArray));
     }
 
     /**
@@ -146,8 +156,19 @@ class SamlDTO
      */
     public function isTeamLead(): bool
     {
-        // If claims list the user as their own manager they are team lead for the lowest org unit given in the id's
-        return $this->emailAddress === $this->managerEmail;
+        return \count($this->employeeList) > 0;
+    }
+
+    /**
+     * Does the user have another user as employee.
+     *
+     * @param string $email Email of the employee
+     *
+     * @return bool
+     */
+    public function hasEmployee(string $email): bool
+    {
+        return isset($this->employeeList[$email]);
     }
 
     /**
@@ -256,8 +277,7 @@ class SamlDTO
     }
 
     /**
-     * Get the organization name the user is placed in. For levels 1-5 we know the claim to map to. For deeper levels
-     * the claims are unknown.
+     * Get the organization name the user is placed in. For levels deeper than 5 we fall back to 'office'.
      *
      * @param int $depth
      *
@@ -270,8 +290,7 @@ class SamlDTO
             2 => $this->division,
             3 => $this->department,
             4 => $this->subDepartment,
-            5 => $this->office,
-            default => ''
+            default => $this->office
         };
 
         return $name ?? '';

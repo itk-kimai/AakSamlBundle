@@ -10,7 +10,7 @@ use KimaiPlugin\AakSamlBundle\Repository\AakSamlTeamMetaRepository;
 use KimaiPlugin\AakSamlBundle\Service\SamlDTO;
 
 #[ORM\Table(name: 'kimai2_aak_saml_team_meta')]
-#[ORM\UniqueConstraint(columns: ['org_unit_id'])]
+#[ORM\UniqueConstraint(columns: ['org_unit_id', 'manager_email'])]
 #[ORM\Entity(repositoryClass: AakSamlTeamMetaRepository::class)]
 #[ORM\ChangeTrackingPolicy('DEFERRED_EXPLICIT')]
 #[Serializer\ExclusionPolicy('all')]
@@ -99,20 +99,20 @@ class AakSamlTeamMeta
     #[Serializer\Groups(['Default'])]
     private array $departmentIds = [];
 
-    public function __construct(Team $team, SamlDTO $samlDTO, int $orgUnitId)
+    public function __construct(Team $team, SamlDTO $samlDTO, int $orgUnitId, string $managerEmail, string $managerName)
     {
         $this->team = $team;
 
-        $this->setValues($samlDTO, $orgUnitId);
+        $this->setValues($samlDTO, $orgUnitId, $managerEmail, $managerName);
     }
 
-    public function setValues(SamlDTO $samlDTO, int $orgUnitId): void
+    public function setValues(SamlDTO $samlDTO, int $orgUnitId, string $managerEmail, string $managerName): void
     {
         $this->orgUnitId = $orgUnitId;
         $this->departmentIds = $samlDTO->departmentIds;
 
-        $this->managerEmail = $samlDTO->managerEmail;
-        $this->managerName = $samlDTO->managerName;
+        $this->managerEmail = $managerEmail;
+        $this->managerName = $managerName;
 
         // If we are hydrating the "member" team for a team lead we don't hydrate the lowest department level.
         // Get the "depth" to go to by finding the position of "$orgUnitId" in the $departmentIds.
