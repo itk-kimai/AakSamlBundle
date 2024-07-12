@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 1.2.0 - 2024-06-26
+
 - Adapt SAML login to `personaleLeder***` claims
+
+## 1.1.0 - 2024-07-01
+
+- Map teams for team leads
 
 ## 1.0.0 - 2024-06-26
 
