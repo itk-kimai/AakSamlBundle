@@ -15,7 +15,7 @@ which in turn delegates the heavy lifting to `KimaiPlugin\AakSamlBundle\Service\
 - `Office (officeId)` -> `name`
 
 We map `Office` (e.g. "ITK Development") to a Kimai team. Kimai has a unique constraint on team names. We include the
-manger (personaleleder) email to ensure uniqueness. E.g. "ITK Development (<jane@examlpe.org>)"
+manager ("personaleleder") email to ensure uniqueness. E.g. "ITK Development (<jane@examlpe.org>)"
 
 - The team MUST have one team lead only.
 - The team lead MUST be the user with email matching the `personaleLederUPN` SAML claim.
