@@ -86,7 +86,7 @@ class SamlDTO
     public readonly array $departmentIds;
 
     /**
-     * @var array<string> og emails for managers employees. Empty for non-managers.
+     * @var array<string, int> og emails for managers employees. Empty for non-managers.
      */
     public readonly array $employeeList;
 
@@ -146,9 +146,7 @@ class SamlDTO
         $this->officeId = $this->departmentIds[4] ?? null;
 
         $employeeEmailArray = \explode(';', $this->getAttributeValue(self::EMPLOYEE_LIST_ATTRIBUTE, $samlAttributes));
-        $this->employeeList = \array_filter($employeeEmailArray, function ($value) {
-            return '' !== $value;
-        });
+        $this->employeeList = \array_flip(\array_filter($employeeEmailArray));
     }
 
     /**
@@ -159,6 +157,18 @@ class SamlDTO
     public function isTeamLead(): bool
     {
         return \count($this->employeeList) > 0;
+    }
+
+    /**
+     * Does the user have another user as employee.
+     *
+     * @param string $email Email of the employee
+     *
+     * @return bool
+     */
+    public function hasEmployee(string $email): bool
+    {
+        return isset($this->employeeList[$email]);
     }
 
     /**

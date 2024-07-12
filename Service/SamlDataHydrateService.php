@@ -48,10 +48,12 @@ class SamlDataHydrateService
             $teamLeadTeam = $this->hydrateTeam($teamUnitName, $teamUnitId, $samlDto->emailAddress, $samlDto->displayName, $samlDto);
             $this->hydrateTeamLeadForTeam($teamLeadTeam, $user);
 
+            // Check all users of all teams the user is team lead for to ensure the user is not
+            // team lead for any users not in "employeeList" claim
             foreach ($user->getTeams() as $team) {
                 if ($team->isTeamlead($user)) {
                     foreach ($team->getUsers() as $teamMember) {
-                        if (!in_array($teamMember->getUsername(), $samlDto->employeeList) && $teamMember->getUsername() !== $user->getUsername()) {
+                        if (!$samlDto->hasEmployee($teamMember->getUsername()) && $teamMember->getUsername() !== $user->getUsername()) {
                             $team->removeUser($teamMember);
                         }
                     }
