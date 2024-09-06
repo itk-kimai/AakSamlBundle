@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 1.2.1 - 2024-09-06
+
+- Add logging og last SAML login datetime. Add view for easier debugging.
+
 ## 1.2.0 - 2024-06-26
 
 - Adapt SAML login to `personaleLeder***` claims

@@ -33,7 +33,12 @@ class SamlClaimsLogger
         $latest = $this->aakSamlClaimsLogRepository->getLatestUserLog($user, $success);
 
         if (!$claimsLog->isLoginSuccess() || $latest?->getClaimsHash() !== $claimsLog->getClaimsHash()) {
+            // Claims have changed, or this is the users first login
             $this->aakSamlClaimsLogRepository->saveAakSamlClaimsLog($claimsLog);
+        } elseif (null !== $latest) {
+            // Claims unchanged. Log latest SAML login datetime.
+            $latest->setLastSamlLoginAt();
+            $this->aakSamlClaimsLogRepository->saveAakSamlClaimsLog($latest);
         }
     }
 }
