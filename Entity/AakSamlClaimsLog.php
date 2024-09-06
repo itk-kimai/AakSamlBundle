@@ -36,6 +36,11 @@ class AakSamlClaimsLog
     #[Serializer\Groups(['Default'])]
     private \DateTimeImmutable $loggedAt;
 
+    #[ORM\Column(name: 'last_saml_login_at', type: Types::DATETIME_IMMUTABLE)]
+    #[Serializer\Expose]
+    #[Serializer\Groups(['Default'])]
+    private \DateTimeImmutable $lastSamlLoginAt;
+
     #[ORM\Column(name: 'claims_hash', type: Types::STRING, length: 255)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
@@ -61,6 +66,7 @@ class AakSamlClaimsLog
         $this->exceptionMessage = null === $exception ? null : \mb_substr($exception->getMessage(), 255);
 
         $this->loggedAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $this->lastSamlLoginAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
     }
 
     public function getId(): int
@@ -76,6 +82,18 @@ class AakSamlClaimsLog
     public function getLoggedAt(): \DateTimeImmutable
     {
         return $this->loggedAt;
+    }
+
+    public function getLastSamlLoginAt(): \DateTimeImmutable
+    {
+        return $this->lastSamlLoginAt;
+    }
+
+    public function setLastSamlLoginAt(): self
+    {
+        $this->lastSamlLoginAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+
+        return $this;
     }
 
     public function getClaimsHash(): string
