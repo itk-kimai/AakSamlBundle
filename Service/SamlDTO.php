@@ -10,7 +10,7 @@ class SamlDTO
     private const AZ_IDENT_ATTRIBUTE = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname';
     private const NAME_ATTRIBUTE = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
     private const EMAIL_ADDRESS_ATTRIBUTE = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
-    private const MANAGER_EMAIL_ATTRIBUTE = 'personaleLederUPN';
+    public const MANAGER_EMAIL_ATTRIBUTE = 'personaleLederUPN';
     private const MANAGER_NAME_ATTRIBUTE = 'personaleLederDisplayName';
     private const COMPANY_NAME_ATTRIBUTE = 'companyname';
     private const DIVISION_ATTRIBUTE = 'division';
