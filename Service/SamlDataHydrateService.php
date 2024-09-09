@@ -36,7 +36,9 @@ class SamlDataHydrateService
         $memberTeam = $this->hydrateTeam($memberUnitName, $memberUnitId, $samlDto->managerEmail, $samlDto->managerName, $samlDto);
 
         // Setup manager (personaleleder) as team lead for the team
-        $this->hydrateTeamLeadForTeam($memberTeam, $teamLead);
+        if (null !== $teamLead) {
+            $this->hydrateTeamLeadForTeam($memberTeam, $teamLead);
+        }
 
         // Set user values and team membership
         $this->hydrateUser($user, $samlDto, $teamLead, $memberTeam);
@@ -62,7 +64,7 @@ class SamlDataHydrateService
         }
     }
 
-    private function hydrateUser(User $user, SamlDTO $samlDto, User $teamLead, Team $memberTeam): void
+    private function hydrateUser(User $user, SamlDTO $samlDto, ?User $teamLead, Team $memberTeam): void
     {
         // The SAML mapping config should map 'email -> username' and 'email -> email'
         // kimai/config/packages/local.yaml
@@ -107,13 +109,12 @@ class SamlDataHydrateService
         /** @var AakSamlTeamMeta $aakSamlTeamMeta */
         $aakSamlTeamMeta = $this->aakSamlTeamMetaRepository->findOneBy(['orgUnitId' => $orgUnitId, 'managerEmail' => $managerEmail]);
 
-        if (null === $aakSamlTeamMeta) {
-            // Fallback to look for teams created with old claims. Prior to correct "personaleleder" claim.
-            $aakSamlTeamMeta = $this->aakSamlTeamMetaRepository->findOneBy(['orgUnitId' => $orgUnitId]);
+        // Kimai has a unique constraint on team names. We include the org-id and manager email to ensure uniqueness.
+        if ('' === $managerEmail) {
+            $teamName = \sprintf('%s (%s)', $name, $orgUnitId);
+        } else {
+            $teamName = \sprintf('%s (%s, %s)', $name, $orgUnitId, $managerEmail);
         }
-
-        // Kimai has a unique constraint on team names. We include the manager email to ensure uniqueness.
-        $teamName = \sprintf('%s (%s)', $name, $managerEmail);
         $teamName = \trim($teamName);
 
         if (null === $aakSamlTeamMeta) {
@@ -138,8 +139,13 @@ class SamlDataHydrateService
     /**
      * @throws AakSamlException
      */
-    private function hydrateTeamLead(SamlDTO $samlDto): User
+    private function hydrateTeamLead(SamlDTO $samlDto): ?User
     {
+        if ('' === $samlDto->managerEmail) {
+            // 'Magistrats direktører' does not have a 'personaledLeder'
+            return null;
+        }
+
         $teamLeadUser = $this->userService->findUserByEmail($samlDto->managerEmail);
 
         if (null === $teamLeadUser) {
