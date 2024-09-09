@@ -35,7 +35,7 @@ class AakSamlClaimsLogRepository extends EntityRepository
     /**
      * Get latest claims logs grouped by user.
      *
-     * @return iterable<AakSamlClaimsLog>
+     * @return iterable
      *
      * @throws QueryException
      */
