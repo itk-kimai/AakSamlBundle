@@ -47,6 +47,8 @@ If the `Team` have other team leads they are removed to handle situations where 
 ### `App\Entity\User` (User)
 
 - `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress` -> `username`
+  (set by Kimai from `kimai.saml.username_attribute`, not the attribute mapping;
+  a `kimai: username` mapping entry is forbidden as of Kimai 2.61)
 - `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress` -> `email`
 - `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name` -> `alias`
 - `Office` -> `title` (Kimai "title" field renamed in the UI)
