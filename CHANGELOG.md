@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Guard user and team values against Kimai's length limits to avoid failed logins
 - Document that the SAML user identifier comes from `kimai.saml.username_attribute`
   rather than the attribute mapping (required by Kimai 2.61)
+- Require Kimai >= 2.61 (`extra.kimai.require`)
 
 ## 1.3.1 - 2025-05-04
 
