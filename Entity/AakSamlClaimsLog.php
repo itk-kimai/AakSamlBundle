@@ -71,7 +71,7 @@ class AakSamlClaimsLog
         $this->claims = $claims;
         $this->claimsHash = $this->calculateHash($claims);
 
-        $this->exceptionMessage = null === $exception ? null : mb_substr($exception->getMessage(), 255);
+        $this->exceptionMessage = null === $exception ? null : mb_substr($exception->getMessage(), 0, 255);
 
         $this->loggedAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $this->lastSamlLoginAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
