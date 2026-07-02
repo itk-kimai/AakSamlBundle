@@ -101,8 +101,6 @@ class SamlDTO
     /**
      * SamlDTO constructor.
      *
-     * @param array $samlAttributes
-     *
      * @throws AakSamlException
      */
     public function __construct(array $samlAttributes)
@@ -159,8 +157,6 @@ class SamlDTO
 
     /**
      * Is the user a team lead.
-     *
-     * @return bool
      */
     public function isTeamLead(): bool
     {
@@ -171,8 +167,6 @@ class SamlDTO
      * Does the user have another user as employee.
      *
      * @param string $email Email of the employee
-     *
-     * @return bool
      */
     public function hasEmployee(string $email): bool
     {
@@ -181,8 +175,6 @@ class SamlDTO
 
     /**
      * Get the organization id. This will be the last of the ids given in the claims.
-     *
-     * @return int
      */
     public function getOrganizationUnitId(): int
     {
@@ -194,8 +186,6 @@ class SamlDTO
     /**
      * Get the organization name the user is placed in. For levels 1-5 we know the claim to map to. For deeper levels
      * the claims are unknown.
-     *
-     * @return string
      */
     public function getOrganizationUnitName(): string
     {
@@ -207,8 +197,6 @@ class SamlDTO
     /**
      * Get the organization id the user is a member in. This will be the last of the ids given in the claims for
      * employees and the second to last for team leads.
-     *
-     * @return int
      *
      * @throws AakSamlException
      */
@@ -229,8 +217,6 @@ class SamlDTO
 
     /**
      * Get the organization name the user is a member in. For team leads this is the second last org claim.
-     *
-     * @return string
      */
     public function getMemberOrganizationUnitName(): string
     {
@@ -245,8 +231,6 @@ class SamlDTO
 
     /**
      * Get the organization id the user is a team lead in. This will be the last of the ids given in the claims.
-     *
-     * @return int
      *
      * @throws AakSamlException
      */
@@ -269,8 +253,6 @@ class SamlDTO
      * Get the organization name the user is team lead for. For levels 1-5 we know the claim to map to. For deeper levels
      * the claims are unknown.
      *
-     * @return string
-     *
      * @throws AakSamlException
      */
     public function getTeamLeadOrganizationUnitName(): string
@@ -286,10 +268,6 @@ class SamlDTO
 
     /**
      * Get the organization name the user is placed in. For levels deeper than 5 we fall back to 'office'.
-     *
-     * @param int $depth
-     *
-     * @return string
      */
     private function getOrgUnitName(int $depth): string
     {
@@ -298,7 +276,7 @@ class SamlDTO
             2 => $this->division,
             3 => $this->department,
             4 => $this->subDepartment,
-            default => $this->office
+            default => $this->office,
         };
 
         return $name;

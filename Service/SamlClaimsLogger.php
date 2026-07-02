@@ -17,17 +17,12 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class SamlClaimsLogger
 {
     public function __construct(
-        private readonly AakSamlClaimsLogRepository $aakSamlClaimsLogRepository
+        private readonly AakSamlClaimsLogRepository $aakSamlClaimsLogRepository,
     ) {
     }
 
     /**
-     * @param UserInterface $user
-     * @param bool $success
      * @param array<string, array<int, string>> $claims
-     * @param \Exception|null $exception
-     *
-     * @return void
      *
      * @throws \Doctrine\ORM\Exception\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException

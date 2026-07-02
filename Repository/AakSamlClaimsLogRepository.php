@@ -23,8 +23,6 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class AakSamlClaimsLogRepository extends EntityRepository
 {
     /**
-     * @param AakSamlClaimsLog $data
-     *
      * @throws ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
@@ -42,8 +40,6 @@ class AakSamlClaimsLogRepository extends EntityRepository
 
     /**
      * Get latest claims logs grouped by user.
-     *
-     * @return iterable
      *
      * @throws QueryException
      */

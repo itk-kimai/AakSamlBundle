@@ -20,8 +20,6 @@ use KimaiPlugin\AakSamlBundle\Entity\AakSamlTeamMeta;
 class AakSamlTeamMetaRepository extends EntityRepository
 {
     /**
-     * @param AakSamlTeamMeta $meta
-     *
      * @throws ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */

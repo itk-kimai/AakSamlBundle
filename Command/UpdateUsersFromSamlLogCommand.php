@@ -76,7 +76,7 @@ class UpdateUsersFromSamlLogCommand extends Command
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $output->writeln('<error>' . $e->getMessage() . '</error>');
+            $output->writeln('<error>'.$e->getMessage().'</error>');
 
             return Command::FAILURE;
         }
