@@ -1,0 +1,16 @@
+# Files and folders left out of release packages built with `bin/create-release`
+# (cf. `git archive`). Development tooling and CI config are not shipped.
+/.editorconfig export-ignore
+/.env export-ignore
+/.gitattributes export-ignore
+/.github export-ignore
+/.gitignore export-ignore
+/.markdownlint.jsonc export-ignore
+/.markdownlintignore export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/.prettierrc.yaml export-ignore
+/docker-compose.yml export-ignore
+/phpstan.neon export-ignore
+/phpunit.xml.dist export-ignore
+/Taskfile.yml export-ignore
+/tests export-ignore

@@ -1,21 +1,22 @@
 <?php
 
-use PhpCsFixerCustomFixers\Fixer\MultilinePromotedPropertiesFixer;
+$fileHeaderComment = <<<COMMENT
+This file is part of the "AakSamlBundle" for Kimai.
+All rights reserved by ITK Development (https://github.com/itk-kimai).
+
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
+COMMENT;
 
 $finder = (new PhpCsFixer\Finder())
     ->in(__DIR__)
-    ->exclude('var')
+    ->exclude(['Resources', 'vendor', '.github'])
 ;
 
 return (new PhpCsFixer\Config())
-    ->registerCustomFixers(new PhpCsFixerCustomFixers\Fixers())
     ->setRules([
         '@Symfony' => true,
-        '@Symfony:risky' => false,
-        'phpdoc_align' => false,
-        'no_superfluous_phpdoc_tags' => false,
-        'array_syntax' => ['syntax' => 'short'],
-        MultilinePromotedPropertiesFixer::name() => true,
+        'header_comment' => ['header' => $fileHeaderComment, 'separate' => 'both'],
     ])
     ->setFinder($finder)
 ;

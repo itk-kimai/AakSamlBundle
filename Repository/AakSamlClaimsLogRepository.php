@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * This file is part of the "AakSamlBundle" for Kimai.
+ * All rights reserved by ITK Development (https://github.com/itk-kimai).
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace KimaiPlugin\AakSamlBundle\Repository;
 
 use Doctrine\ORM\EntityRepository;
@@ -15,8 +23,6 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class AakSamlClaimsLogRepository extends EntityRepository
 {
     /**
-     * @param AakSamlClaimsLog $data
-     *
      * @throws ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
@@ -34,8 +40,6 @@ class AakSamlClaimsLogRepository extends EntityRepository
 
     /**
      * Get latest claims logs grouped by user.
-     *
-     * @return iterable
      *
      * @throws QueryException
      */

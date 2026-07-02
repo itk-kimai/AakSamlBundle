@@ -1,0 +1,150 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+version: "3"
+
+vars:
+  DOCKER_COMPOSE: "docker compose"
+  PHP: "{{.DOCKER_COMPOSE}} exec phpfpm"
+  COMPOSER: "{{.PHP}} composer"
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  install:
+    desc: Install dependencies
+    cmds:
+      - task: composer:install
+
+  setup:
+    desc: Set up the project
+    cmds:
+      - task: up
+      - task: install
+
+  # Container management
+
+  up:
+    desc: Start docker containers
+    cmds:
+      - task: network:frontend
+      - "{{.DOCKER_COMPOSE}} up -d"
+
+  down:
+    desc: Stop docker containers
+    cmds:
+      - "{{.DOCKER_COMPOSE}} down"
+
+  restart:
+    desc: Restart docker containers
+    cmds:
+      - task: down
+      - task: up
+
+  network:frontend:
+    internal: true
+    desc: Create docker frontend network
+    cmds:
+      - docker network create frontend 2>/dev/null || true
+
+  # Composer
+
+  composer:
+    desc: Run arbitrary composer command
+    cmds:
+      - "{{.COMPOSER}} {{.CLI_ARGS}}"
+
+  composer:install:
+    desc: Install composer dependencies
+    cmds:
+      - "{{.COMPOSER}} install"
+
+  composer:update:
+    desc: Update composer dependencies
+    cmds:
+      - "{{.COMPOSER}} update"
+
+  composer:normalize:
+    desc: Normalize composer.json
+    cmds:
+      - "{{.COMPOSER}} normalize"
+
+  composer:check:
+    desc: Validate and audit composer
+    cmds:
+      - "{{.PHP}} composer validate --strict"
+      - "{{.COMPOSER}} normalize --dry-run"
+      - "{{.COMPOSER}} audit"
+
+  # Code quality
+
+  lint:
+    desc: Run all linters
+    cmds:
+      - task: lint:php
+      - task: lint:composer
+      - task: lint:markdown
+      - task: lint:yaml
+
+  lint:php:
+    desc: Check PHP coding standards
+    cmds:
+      - "{{.PHP}} vendor/bin/php-cs-fixer fix --dry-run --diff"
+
+  lint:php:fix:
+    desc: Fix PHP coding standards
+    cmds:
+      - "{{.PHP}} vendor/bin/php-cs-fixer fix"
+
+  lint:composer:
+    desc: Validate and audit composer
+    cmds:
+      - "{{.PHP}} composer validate --strict"
+      - "{{.COMPOSER}} normalize --dry-run"
+      - "{{.COMPOSER}} audit"
+
+  lint:markdown:
+    desc: Lint markdown files
+    cmds:
+      - "{{.DOCKER_COMPOSE}} run --rm markdownlint markdownlint '**/*.md'"
+
+  lint:markdown:fix:
+    desc: Fix markdown files
+    cmds:
+      - "{{.DOCKER_COMPOSE}} run --rm markdownlint markdownlint '**/*.md' --fix"
+
+  lint:yaml:
+    desc: Lint YAML files
+    cmds:
+      - "{{.DOCKER_COMPOSE}} run --rm prettier '**/*.{yml,yaml}' --check"
+
+  lint:yaml:fix:
+    desc: Fix YAML files
+    cmds:
+      - "{{.DOCKER_COMPOSE}} run --rm prettier '**/*.{yml,yaml}' --write"
+
+  # Analysis
+
+  analyze:php:
+    desc: Run PHPStan static analysis
+    cmds:
+      - "{{.PHP}} vendor/bin/phpstan analyse . --configuration=phpstan.neon"
+
+  # Tests
+
+  test:
+    desc: Run tests
+    cmds:
+      - "{{.PHP}} vendor/bin/phpunit"
+
+  # CI
+
+  pr:actions:
+    desc: Run all CI checks locally
+    cmds:
+      - task: composer:check
+      - task: lint
+      - task: analyze:php
+      - task: test
