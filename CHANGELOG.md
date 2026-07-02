@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 1.4.1 - 2026-07-02
+
+- Rename `tests` directory to `Tests` to comply with Kimai's PSR-4 autoloading
+
 ## 1.4.0 - 2026-07-02
 
 - Align dev tooling and release setup with AarhusKommuneBundle

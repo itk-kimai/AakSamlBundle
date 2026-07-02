@@ -37,7 +37,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "KimaiPlugin\\AakSamlBundle\\Tests\\": "tests/"
+            "KimaiPlugin\\AakSamlBundle\\Tests\\": "Tests/"
         }
     },
     "config": {
