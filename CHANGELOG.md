@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Align dev tooling and release setup with AarhusKommuneBundle
+
 ## 1.3.1 - 2025-05-04
 
 - Add missing version number to composer.json

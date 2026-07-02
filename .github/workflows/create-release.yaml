@@ -1,0 +1,44 @@
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+name: Create Github Release
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build release package
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          plugin_name=AakSamlBundle
+          target="release/$plugin_name"
+          mkdir -p "$target"
+
+          # Export the committed files, honouring `export-ignore` in
+          # `.gitattributes` so development tooling is left out.
+          git archive --format=tar HEAD | tar --extract --directory "$target"
+
+          # Set the release version in composer.json 
+          composer config version "$TAG" --working-dir="$target"
+
+          tar --create --gzip --file "$plugin_name-$TAG.tar.gz" -C release "$plugin_name"
+
+          # Checksum for the release archive.
+          sha256sum "$plugin_name-$TAG.tar.gz" > checksum.txt
+        shell: bash
+
+      - name: Create a release in GitHub
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" --verify-tag --generate-notes "AakSamlBundle-$TAG.tar.gz" checksum.txt
+        shell: bash

@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * This file is part of the "AakSamlBundle" for Kimai.
+ * All rights reserved by ITK Development (https://github.com/itk-kimai).
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace KimaiPlugin\AakSamlBundle\Service;
 
 use KimaiPlugin\AakSamlBundle\Exception\AakSamlException;
@@ -93,8 +101,6 @@ class SamlDTO
     /**
      * SamlDTO constructor.
      *
-     * @param array $samlAttributes
-     *
      * @throws AakSamlException
      */
     public function __construct(array $samlAttributes)
@@ -113,19 +119,19 @@ class SamlDTO
         $this->office = $this->getAttributeValue(self::OFFICE_ATTRIBUTE, $samlAttributes);
 
         // Hydrate id values from id array. E.g. [1001;1004;1012;1103;6530].
-        $ids = \explode(';', $this->getAttributeValue(self::ID_ARRAY_ATTRIBUTE, $samlAttributes));
+        $ids = explode(';', $this->getAttributeValue(self::ID_ARRAY_ATTRIBUTE, $samlAttributes));
 
         // Convert all array values to integer or throw AakSamlException
         $departmentIds = [];
         foreach ($ids as $id) {
-            $value = intval($id);
+            $value = \intval($id);
 
             if (0 > $value) {
-                throw new AakSamlException(sprintf('Invalid id value "%s" - Expected a positive integer.', $value));
+                throw new AakSamlException(\sprintf('Invalid id value "%s" - Expected a positive integer.', $value));
             }
 
             if (0 === $value) {
-                throw new AakSamlException(sprintf('Invalid id value "%s" - Cannot convert to integer.', $value));
+                throw new AakSamlException(\sprintf('Invalid id value "%s" - Cannot convert to integer.', $value));
             }
 
             $departmentIds[] = $value;
@@ -133,8 +139,8 @@ class SamlDTO
 
         $this->departmentIds = $departmentIds;
 
-        if (0 === count($this->departmentIds)) {
-            throw new AakSamlException(sprintf('No organization ids given in claims: "%s"', $this->getAttributeValue(self::ID_ARRAY_ATTRIBUTE, $samlAttributes)));
+        if (0 === \count($this->departmentIds)) {
+            throw new AakSamlException(\sprintf('No organization ids given in claims: "%s"', $this->getAttributeValue(self::ID_ARRAY_ATTRIBUTE, $samlAttributes)));
         }
 
         // We can map claims from level 1-5. If we see id's for deeper levels we don't know the corresponding claim for
@@ -145,14 +151,12 @@ class SamlDTO
         $this->subDepartmentId = $this->departmentIds[3] ?? null;
         $this->officeId = $this->departmentIds[4] ?? null;
 
-        $employeeEmailArray = \explode(';', $this->getAttributeValue(self::EMPLOYEE_LIST_ATTRIBUTE, $samlAttributes));
-        $this->employeeList = \array_flip(\array_filter($employeeEmailArray));
+        $employeeEmailArray = explode(';', $this->getAttributeValue(self::EMPLOYEE_LIST_ATTRIBUTE, $samlAttributes));
+        $this->employeeList = array_flip(array_filter($employeeEmailArray));
     }
 
     /**
      * Is the user a team lead.
-     *
-     * @return bool
      */
     public function isTeamLead(): bool
     {
@@ -163,8 +167,6 @@ class SamlDTO
      * Does the user have another user as employee.
      *
      * @param string $email Email of the employee
-     *
-     * @return bool
      */
     public function hasEmployee(string $email): bool
     {
@@ -173,12 +175,10 @@ class SamlDTO
 
     /**
      * Get the organization id. This will be the last of the ids given in the claims.
-     *
-     * @return int
      */
     public function getOrganizationUnitId(): int
     {
-        $id = array_slice($this->departmentIds, -1, 1);
+        $id = \array_slice($this->departmentIds, -1, 1);
 
         return $id[0];
     }
@@ -186,8 +186,6 @@ class SamlDTO
     /**
      * Get the organization name the user is placed in. For levels 1-5 we know the claim to map to. For deeper levels
      * the claims are unknown.
-     *
-     * @return string
      */
     public function getOrganizationUnitName(): string
     {
@@ -200,19 +198,17 @@ class SamlDTO
      * Get the organization id the user is a member in. This will be the last of the ids given in the claims for
      * employees and the second to last for team leads.
      *
-     * @return int
-     *
      * @throws AakSamlException
      */
     public function getMemberOrganizationUnitId(): int
     {
         if ($this->isTeamLead()) {
-            $id = array_slice($this->departmentIds, -2, 1);
+            $id = \array_slice($this->departmentIds, -2, 1);
         } else {
-            $id = array_slice($this->departmentIds, -1, 1);
+            $id = \array_slice($this->departmentIds, -1, 1);
         }
 
-        if (1 !== count($id)) {
+        if (1 !== \count($id)) {
             throw new AakSamlException('Cannot determine organization id from id (extensionAttribute7) array.');
         }
 
@@ -221,8 +217,6 @@ class SamlDTO
 
     /**
      * Get the organization name the user is a member in. For team leads this is the second last org claim.
-     *
-     * @return string
      */
     public function getMemberOrganizationUnitName(): string
     {
@@ -238,8 +232,6 @@ class SamlDTO
     /**
      * Get the organization id the user is a team lead in. This will be the last of the ids given in the claims.
      *
-     * @return int
-     *
      * @throws AakSamlException
      */
     public function getTeamLeadOrganizationUnitId(): int
@@ -248,9 +240,9 @@ class SamlDTO
             throw new AakSamlException('Cannot get team lead org from none team lead user.');
         }
 
-        $id = array_slice($this->departmentIds, -1, 1);
+        $id = \array_slice($this->departmentIds, -1, 1);
 
-        if (1 !== count($id)) {
+        if (1 !== \count($id)) {
             throw new AakSamlException('Cannot determine organization id from id (extensionAttribute7) array.');
         }
 
@@ -260,8 +252,6 @@ class SamlDTO
     /**
      * Get the organization name the user is team lead for. For levels 1-5 we know the claim to map to. For deeper levels
      * the claims are unknown.
-     *
-     * @return string
      *
      * @throws AakSamlException
      */
@@ -278,10 +268,6 @@ class SamlDTO
 
     /**
      * Get the organization name the user is placed in. For levels deeper than 5 we fall back to 'office'.
-     *
-     * @param int $depth
-     *
-     * @return string
      */
     private function getOrgUnitName(int $depth): string
     {
@@ -290,10 +276,10 @@ class SamlDTO
             2 => $this->division,
             3 => $this->department,
             4 => $this->subDepartment,
-            default => $this->office
+            default => $this->office,
         };
 
-        return $name ?? '';
+        return $name;
     }
 
     /**
@@ -301,16 +287,16 @@ class SamlDTO
      */
     private function getAttributeValue(string $attributeName, array $samlAttributes): string
     {
-        if (array_key_exists($attributeName, $samlAttributes)) {
+        if (\array_key_exists($attributeName, $samlAttributes)) {
             $subArray = $samlAttributes[$attributeName];
 
-            if (1 === count($subArray)) {
+            if (1 === \count($subArray)) {
                 $value = $subArray[0];
             } else {
-                throw new AakSamlException(sprintf('Unexpected number of values for SAML attribute: %s Expected 1, %d given.', $attributeName, count($subArray)));
+                throw new AakSamlException(\sprintf('Unexpected number of values for SAML attribute: %s Expected 1, %d given.', $attributeName, \count($subArray)));
             }
         } else {
-            throw new AakSamlException(sprintf('Missing SAML attribute: %s', $attributeName));
+            throw new AakSamlException(\sprintf('Missing SAML attribute: %s', $attributeName));
         }
 
         return $value;

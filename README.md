@@ -116,7 +116,7 @@ All data sync happens on login through claims. This means
 ## Development
 
 ``` shell
-git clone --branch develop https://github.com/itk-kimai/kimai-plugin-AarhusKommuneBundle var/plugins/AarhusKommuneBundle
+git clone --branch develop https://github.com/itk-kimai/AakSamlBundle var/plugins/AakSamlBundle
 bin/console kimai:reload --no-interaction
 ```
 
@@ -128,24 +128,44 @@ bin/console assets:install --symlink
 
 to [symlink](https://en.wikipedia.org/wiki/Symbolic_link) the `public` folder.
 
-### Coding standards
+### Coding standards and tooling
+
+A `docker-compose.yml` file with a PHP 8.4 image is included in this project.
+A [Taskfile](https://taskfile.dev/) is used to run common development tasks.
+
+Set up the project (start the containers and install dependencies) with
 
 ``` shell
-docker run --rm --volume ${PWD}:/app --workdir /app itkdev/php8.3-fpm composer install
-docker run --rm --volume ${PWD}:/app --workdir /app itkdev/php8.3-fpm composer normalize
-docker run --rm --volume ${PWD}:/app --workdir /app itkdev/php8.3-fpm composer coding-standards-apply
-docker run --rm --volume ${PWD}:/app --workdir /app itkdev/php8.3-fpm composer coding-standards-check
+task setup
 ```
 
-``` shell
-docker run --platform=linux/amd64 --rm --volume "$(pwd):/md" peterdavehello/markdownlint markdownlint --ignore LICENSE.md --ignore vendor/ '**/*.md' --fix
-docker run --platform=linux/amd64 --rm --volume "$(pwd):/md" peterdavehello/markdownlint markdownlint --ignore LICENSE.md --ignore vendor/ '**/*.md'
-```
+Run all CI checks locally (coding standards, static analysis):
 
 ``` shell
-docker run --rm --volume ${PWD}:/app --workdir /app itkdev/php8.3-fpm composer install
-docker run --rm --volume ${PWD}:/app --workdir /app itkdev/php8.3-fpm composer code-analysis
+task pr:actions
 ```
+
+Check all coding standards (PHP, Markdown, YAML, composer):
+
+``` shell
+task lint
+```
+
+Fix coding standards:
+
+``` shell
+task lint:php:fix
+task lint:markdown:fix
+task lint:yaml:fix
+```
+
+Run static analysis:
+
+``` shell
+task analyze:php
+```
+
+Run `task --list` to see all available tasks.
 
 _Note_: During development you should remove the `vendor/` folder to not confuse Kimai's autoloading.
 

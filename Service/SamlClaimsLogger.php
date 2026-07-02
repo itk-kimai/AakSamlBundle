@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * This file is part of the "AakSamlBundle" for Kimai.
+ * All rights reserved by ITK Development (https://github.com/itk-kimai).
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace KimaiPlugin\AakSamlBundle\Service;
 
 use KimaiPlugin\AakSamlBundle\Entity\AakSamlClaimsLog;
@@ -9,17 +17,12 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class SamlClaimsLogger
 {
     public function __construct(
-        private readonly AakSamlClaimsLogRepository $aakSamlClaimsLogRepository
+        private readonly AakSamlClaimsLogRepository $aakSamlClaimsLogRepository,
     ) {
     }
 
     /**
-     * @param UserInterface $user
-     * @param bool $success
      * @param array<string, array<int, string>> $claims
-     * @param \Exception|null $exception
-     *
-     * @return void
      *
      * @throws \Doctrine\ORM\Exception\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
