@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * This file is part of the "AakSamlBundle" for Kimai.
+ * All rights reserved by ITK Development (https://github.com/itk-kimai).
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace KimaiPlugin\AakSamlBundle\Command;
 
 use App\Entity\User;
@@ -45,7 +53,7 @@ class UpdateUsersFromSamlLogCommand extends Command
         $email = $input->getOption('user');
 
         try {
-            if (is_string($email)) {
+            if (\is_string($email)) {
                 $user = $this->userService->findUserByEmail($email);
                 if (null !== $user) {
                     $log = $this->claimsLogRepository->getLatestUserLog($user);
@@ -68,7 +76,7 @@ class UpdateUsersFromSamlLogCommand extends Command
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $output->writeln('<error>'.$e->getMessage().'</error>');
+            $output->writeln('<error>' . $e->getMessage() . '</error>');
 
             return Command::FAILURE;
         }

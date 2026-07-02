@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * This file is part of the "AakSamlBundle" for Kimai.
+ * All rights reserved by ITK Development (https://github.com/itk-kimai).
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace KimaiPlugin\AakSamlBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
@@ -63,7 +71,7 @@ class AakSamlClaimsLog
         $this->claims = $claims;
         $this->claimsHash = $this->calculateHash($claims);
 
-        $this->exceptionMessage = null === $exception ? null : \mb_substr($exception->getMessage(), 255);
+        $this->exceptionMessage = null === $exception ? null : mb_substr($exception->getMessage(), 255);
 
         $this->loggedAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $this->lastSamlLoginAt = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
@@ -122,10 +130,10 @@ class AakSamlClaimsLog
      * This hash should be used to see if claims have changed.
      *
      * @param array $data
-     *   The claims array to calculate hash value for
+     *                    The claims array to calculate hash value for
      *
      * @return string
-     *   The calculated hash string
+     *                The calculated hash string
      */
     private function calculateHash(array $data): string
     {
