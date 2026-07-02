@@ -132,6 +132,13 @@ tasks:
     cmds:
       - "{{.PHP}} vendor/bin/phpstan analyse . --configuration=phpstan.neon"
 
+  # Tests
+
+  test:
+    desc: Run tests
+    cmds:
+      - "{{.PHP}} vendor/bin/phpunit"
+
   # CI
 
   pr:actions:
@@ -140,3 +147,4 @@ tasks:
       - task: composer:check
       - task: lint
       - task: analyze:php
+      - task: test

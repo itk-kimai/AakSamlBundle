@@ -5,6 +5,9 @@
 composer.lock
 .twig-cs-fixer.cache
 
+.phpunit.cache
+.phpunit.result.cache
+
 # Release artifacts
 release/
 checksum.txt

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Align dev tooling and release setup with AarhusKommuneBundle
+- Add unit tests for `SamlDTO`
 
 ## 1.3.1 - 2025-05-04
 

@@ -11,4 +11,6 @@
 /.prettierrc.yaml export-ignore
 /docker-compose.yml export-ignore
 /phpstan.neon export-ignore
+/phpunit.xml.dist export-ignore
 /Taskfile.yml export-ignore
+/tests export-ignore
