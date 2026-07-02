@@ -1,5 +1,11 @@
 # AakSamlBundle
 
+[![Release](https://img.shields.io/github/v/release/itk-kimai/AakSamlBundle?style=flat-square)](https://github.com/itk-kimai/AakSamlBundle/releases)
+[![PHP](https://img.shields.io/github/actions/workflow/status/itk-kimai/AakSamlBundle/php.yaml?style=flat-square&logo=github&label=PHP)](https://github.com/itk-kimai/AakSamlBundle/actions/workflows/php.yaml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/itk-kimai/AakSamlBundle/test.yaml?style=flat-square&logo=github&label=tests)](https://github.com/itk-kimai/AakSamlBundle/actions/workflows/test.yaml)
+[![Kimai](https://img.shields.io/badge/Kimai-%E2%89%A5%202.61-3AA5A0?style=flat-square)](https://www.kimai.org/)
+[![License](https://img.shields.io/github/license/itk-kimai/AakSamlBundle?style=flat-square)](https://github.com/itk-kimai/AakSamlBundle/blob/main/LICENSE)
+
 Bundle to handle mapping between City of Aarhus SAML claims and Kimai team structure.
 
 Developed as a [Kimai](https://www.kimai.org/) plugin following the [developer documentation](https://www.kimai.org/documentation/plugins.html)
@@ -12,10 +18,12 @@ which in turn delegates the heavy lifting to `KimaiPlugin\AakSamlBundle\Service\
 
 ### `App\Entity\Team`
 
-- `Office (officeId)` -> `name`
+- `Office (orgUnitId, personaleLederUPN)` -> `name`
 
-We map `Office` (e.g. "ITK Development") to a Kimai team. Kimai has a unique constraint on team names. We include the
-manager ("personaleleder") email to ensure uniqueness. E.g. "ITK Development (<jane@examlpe.org>)"
+We map `Office` (e.g. "ITK Development") to a Kimai team. Kimai has a unique constraint on team names, so we append the
+org-unit id and the manager ("personaleleder") email to ensure uniqueness, e.g. `ITK Development (6530, john@example.org)`
+(or `ITK Development (6530)` when there is no manager). The name is truncated to Kimai's 100-character limit while the
+uniqueness suffix is kept intact.
 
 - The team MUST have one team lead only.
 - The team lead MUST be the user with email matching the `personaleLederUPN` SAML claim.
@@ -71,6 +79,10 @@ All data sync happens on login through claims. This means
 - We cannot delete or disable users (@todo implement delta sync)
 - A manager logging in prior to any private team members will have `ROLE_TEAMLEAD` but employees will only be created as
   team members when they log in
+- SAML claims are unbounded, so values are guarded against Kimai's field limits before saving: `title` (50), `alias`
+  (60), `account` (30) and team `name` (100) are truncated (team names keep their uniqueness suffix). The manager email
+  backing the unique `username`/`email` cannot be truncated safely, so a login fails with a clear error if it exceeds
+  the 64-character limit
 
 ## Claims structure for reference
 
@@ -167,11 +179,19 @@ Run static analysis:
 task analyze:php
 ```
 
+Run the tests:
+
+``` shell
+task test
+```
+
 Run `task --list` to see all available tasks.
 
 _Note_: During development you should remove the `vendor/` folder to not confuse Kimai's autoloading.
 
 ## Installation
+
+Requires Kimai >= 2.61 (enforced via `extra.kimai.require`).
 
 Download [a release](https://github.com/itk-kimai/AakSamlBundle/releases) and move it to `var/plugins/`. Or check out
 a release tag from this the repository in the `var/plugins/` repository.
