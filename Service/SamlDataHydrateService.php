@@ -143,7 +143,7 @@ class SamlDataHydrateService
             $suffix = \sprintf(' (%s, %s)', $orgUnitId, $managerEmail);
         }
         $nameBudget = self::TEAM_NAME_MAX_LENGTH - mb_strlen($suffix);
-        $teamName = trim($this->truncate($name, max(0, $nameBudget)) . $suffix);
+        $teamName = trim($this->truncate($name, max(0, $nameBudget)).$suffix);
 
         if (null === $aakSamlTeamMeta) {
             $team = new Team(name: $teamName);
@@ -184,12 +184,7 @@ class SamlDataHydrateService
             // truncate to the same value and collide. The username limit (64) is the binding one
             // (< the 180 email limit), so we fail fast with a clear, logged message instead.
             if (mb_strlen($samlDto->managerEmail) > self::USER_USERNAME_MAX_LENGTH) {
-                throw new AakSamlException(\sprintf(
-                    'Manager email "%s" (%d chars) exceeds Kimai\'s %d-character username limit; cannot create team lead user.',
-                    $samlDto->managerEmail,
-                    mb_strlen($samlDto->managerEmail),
-                    self::USER_USERNAME_MAX_LENGTH,
-                ));
+                throw new AakSamlException(\sprintf('Manager email "%s" (%d chars) exceeds Kimai\'s %d-character username limit; cannot create team lead user.', $samlDto->managerEmail, mb_strlen($samlDto->managerEmail), self::USER_USERNAME_MAX_LENGTH));
             }
 
             $teamLeadUser = $this->userService->createNewUser();
