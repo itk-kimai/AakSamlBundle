@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Align dev tooling and release setup with AarhusKommuneBundle
 - Add unit tests for `SamlDTO`
 - Fix claims-log discarding exception messages (they were truncated away)
+- Guard user and team values against Kimai's length limits to avoid failed logins
 
 ## 1.3.1 - 2025-05-04
 
