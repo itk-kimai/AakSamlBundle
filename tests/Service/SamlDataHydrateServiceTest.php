@@ -107,7 +107,7 @@ final class SamlDataHydrateServiceTest extends TestCase
 
         // A manager email longer than the 64-char username limit cannot be
         // truncated (username/email are unique), so hydration must fail clearly.
-        $longEmail = str_repeat('a', 60) . '@aarhus.dk'; // 70 chars
+        $longEmail = str_repeat('a', 60).'@aarhus.dk'; // 70 chars
 
         $this->expectException(AakSamlException::class);
         $this->expectExceptionMessage('username limit');
