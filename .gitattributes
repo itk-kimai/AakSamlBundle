@@ -13,4 +13,4 @@
 /phpstan.neon export-ignore
 /phpunit.xml.dist export-ignore
 /Taskfile.yml export-ignore
-/tests export-ignore
+/Tests export-ignore
