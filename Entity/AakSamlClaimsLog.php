@@ -129,11 +129,9 @@ class AakSamlClaimsLog
      *
      * This hash should be used to see if claims have changed.
      *
-     * @param array $data
-     *                    The claims array to calculate hash value for
+     * @param array $data The claims array to calculate hash value for
      *
-     * @return string
-     *                The calculated hash string
+     * @return string The calculated hash string
      */
     private function calculateHash(array $data): string
     {
