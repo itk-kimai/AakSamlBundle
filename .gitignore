@@ -4,3 +4,8 @@
 .php-cs-fixer.cache
 composer.lock
 .twig-cs-fixer.cache
+
+# Release artifacts
+release/
+checksum.txt
+*.tar.gz
