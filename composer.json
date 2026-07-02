@@ -58,7 +58,7 @@
     "extra": {
         "kimai": {
             "name": "City of Aarhus AD/SAML integration",
-            "require": 21800
+            "require": 26100
         }
     }
 }
