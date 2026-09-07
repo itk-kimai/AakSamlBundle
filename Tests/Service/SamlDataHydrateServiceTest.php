@@ -50,12 +50,12 @@ final class SamlDataHydrateServiceTest extends TestCase
 
     private function newService(TeamRepository $teamRepository): SamlDataHydrateService
     {
-        $userService = $this->createStub(UserService::class);
+        $userService = self::createStub(UserService::class);
         // Return the user passed in so the hydrate flow can continue.
         $userService->method('updateUser')->willReturnArgument(0);
         $userService->method('findUserByEmail')->willReturn(null);
 
-        $metaRepository = $this->createStub(AakSamlTeamMetaRepository::class);
+        $metaRepository = self::createStub(AakSamlTeamMetaRepository::class);
         $metaRepository->method('findOneBy')->willReturn(null);
 
         return new SamlDataHydrateService($userService, $teamRepository, $metaRepository);
@@ -64,7 +64,7 @@ final class SamlDataHydrateServiceTest extends TestCase
     public function testOverlongValuesAreTruncatedToKimaiLimits(): void
     {
         $savedTeams = [];
-        $teamRepository = $this->createStub(TeamRepository::class);
+        $teamRepository = self::createStub(TeamRepository::class);
         $teamRepository->method('saveTeam')->willReturnCallback(
             function (Team $team) use (&$savedTeams): void {
                 $savedTeams[] = $team;
@@ -101,7 +101,7 @@ final class SamlDataHydrateServiceTest extends TestCase
 
     public function testOverlongManagerEmailIsRejectedRatherThanTruncated(): void
     {
-        $teamRepository = $this->createStub(TeamRepository::class);
+        $teamRepository = self::createStub(TeamRepository::class);
         $service = $this->newService($teamRepository);
         $user = new User();
 
@@ -110,7 +110,7 @@ final class SamlDataHydrateServiceTest extends TestCase
         $longEmail = str_repeat('a', 60).'@aarhus.dk'; // 70 chars
 
         $this->expectException(AakSamlException::class);
-        $this->expectExceptionMessage('username limit');
+        $this->expectExceptionMessageIsOrContains('username limit');
 
         $service->hydrate($user, new SamlDTO(self::attributes([
             'personaleLederUPN' => [$longEmail],

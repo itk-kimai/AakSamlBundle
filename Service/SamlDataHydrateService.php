@@ -203,7 +203,8 @@ class SamlDataHydrateService
 
             $teamLeadUser->setAuth('aak_saml');
 
-            $this->userService->saveNewUser($teamLeadUser);
+            // saveUser() delegates to the @internal saveNewUser() for a user without an id.
+            $this->userService->saveUser($teamLeadUser);
         }
 
         return $teamLeadUser;

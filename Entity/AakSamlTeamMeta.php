@@ -102,6 +102,9 @@ class AakSamlTeamMeta
     #[Serializer\Groups(['Default'])]
     private ?string $officeName;
 
+    /**
+     * @var list<int> of hierarchical organization id's going top to bottom
+     */
     #[ORM\Column(name: 'dept_ids', type: Types::JSON, nullable: false)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
@@ -124,7 +127,9 @@ class AakSamlTeamMeta
 
         // If we are hydrating the "member" team for a team lead we don't hydrate the lowest department level.
         // Get the "depth" to go to by finding the position of "$orgUnitId" in the $departmentIds.
-        $depth = array_search($orgUnitId, $this->departmentIds);
+        // An id outside the hierarchy has no depth and is treated as the top level.
+        $position = array_search($orgUnitId, $this->departmentIds, true);
+        $depth = false === $position ? 0 : $position;
 
         $this->companyId = $samlDTO->companyId;
         $this->companyName = $samlDTO->company;
@@ -285,11 +290,17 @@ class AakSamlTeamMeta
         $this->officeName = $officeName;
     }
 
+    /**
+     * @return list<int>
+     */
     public function getDepartmentIds(): array
     {
         return $this->departmentIds;
     }
 
+    /**
+     * @param list<int> $departmentIds
+     */
     public function setDepartmentIds(array $departmentIds): void
     {
         $this->departmentIds = $departmentIds;

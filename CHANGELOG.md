@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Raise static analysis to PHPStan level 9 with strict rules, deprecation rules and bleeding edge enabled
+- Compare organization ids strictly when resolving the team depth, and filter the employee list explicitly
+- Save new team lead users through the public `UserService::saveUser()` instead of Kimai's `@internal`
+  `saveNewUser()`
+- Replace the deprecated PHPUnit `expectExceptionMessage()` with `expectExceptionMessageIsOrContains()`
+
 ## 1.4.1 - 2026-07-02
 
 - Rename `tests` directory to `Tests` to comply with Kimai's PSR-4 autoloading
