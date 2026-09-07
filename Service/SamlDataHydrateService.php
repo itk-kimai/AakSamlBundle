@@ -223,7 +223,7 @@ class SamlDataHydrateService
                 // If the user is no longer team lead for any team then ROLE_TEAMLEAD should be removed
                 if (!$teamLead->isTeamlead()) {
                     $teamLead->removeRole(User::ROLE_TEAMLEAD);
-                    $this->userService->updateUser($teamLeadUser);
+                    $this->userService->updateUser($teamLead);
                 }
             }
         }

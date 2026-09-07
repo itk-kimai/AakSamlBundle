@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Save new team lead users through the public `UserService::saveUser()` instead of Kimai's `@internal`
   `saveNewUser()`
 - Replace the deprecated PHPUnit `expectExceptionMessage()` with `expectExceptionMessageIsOrContains()`
+- Add unit tests for `SamlClaimsLogger`, `CheckPassportEventSubscriber` and `AakSamlTeamMeta`, and cover team
+  creation, the team lead swap, membership pruning and manager creation in `SamlDataHydrateService`
+- Fix `AakSamlTeamMeta::setValues()` leaving the levels below the org unit uninitialised, so reading them threw
+  "must not be accessed before initialization" for an org unit outside the claimed hierarchy
+- Fix the team lead swap saving the new team lead instead of the demoted one when removing `ROLE_TEAMLEAD`
+- Widen the coverage source to `Entity` and `EventSubscriber`; it only listed `Service`
 
 ## 1.4.1 - 2026-07-02
 

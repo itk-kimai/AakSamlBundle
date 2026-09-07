@@ -134,6 +134,18 @@ class AakSamlTeamMeta
         $this->companyId = $samlDTO->companyId;
         $this->companyName = $samlDTO->company;
 
+        // Only the levels down to the org unit are ours to keep. Clearing them first
+        // leaves an id outside the hierarchy (or a shallower one than last login) with
+        // null values instead of uninitialised properties or values from a deeper level.
+        $this->divisionId = null;
+        $this->divisionName = null;
+        $this->departmentId = null;
+        $this->departmentName = null;
+        $this->subDepartmentId = null;
+        $this->subDepartmentName = null;
+        $this->officeId = null;
+        $this->officeName = null;
+
         if ($depth >= 1) {
             $this->divisionId = $samlDTO->divisionId;
             $this->divisionName = $samlDTO->division;

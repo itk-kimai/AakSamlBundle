@@ -14,6 +14,7 @@ use App\Entity\Team;
 use App\Entity\User;
 use App\Repository\TeamRepository;
 use App\User\UserService;
+use KimaiPlugin\AakSamlBundle\Entity\AakSamlTeamMeta;
 use KimaiPlugin\AakSamlBundle\Exception\AakSamlException;
 use KimaiPlugin\AakSamlBundle\Repository\AakSamlTeamMetaRepository;
 use KimaiPlugin\AakSamlBundle\Service\SamlDataHydrateService;
@@ -25,6 +26,10 @@ use PHPUnit\Framework\TestCase;
 final class SamlDataHydrateServiceTest extends TestCase
 {
     /**
+     * Claims for a user placed five levels down: 1001 (Aarhus Kommune) /
+     * 1004 (Kultur og Borgerservice) / 1012 (Borgerservice og Biblioteker) /
+     * 1103 (ITK) / 6530 (ITK Development), with no manager and no employees.
+     *
      * @param array<string, list<string>> $overrides
      *
      * @return array<string, list<string>>
@@ -48,22 +53,41 @@ final class SamlDataHydrateServiceTest extends TestCase
         ];
     }
 
-    private function newService(TeamRepository $teamRepository): SamlDataHydrateService
+    /**
+     * @param array<string, User> $usersByEmail existing Kimai users, keyed by email
+     * @param list<User>          $savedUsers   users passed to UserService::saveUser()
+     * @param list<User>          $updatedUsers users passed to UserService::updateUser()
+     */
+    private function userService(array $usersByEmail, array &$savedUsers, array &$updatedUsers): UserService
     {
         $userService = self::createStub(UserService::class);
-        // Return the user passed in so the hydrate flow can continue.
-        $userService->method('updateUser')->willReturnArgument(0);
-        $userService->method('findUserByEmail')->willReturn(null);
+        $userService->method('findUserByEmail')->willReturnCallback(
+            static fn (string $email): ?User => $usersByEmail[$email] ?? null
+        );
+        $userService->method('createNewUser')->willReturnCallback(static fn (): User => new User());
+        $userService->method('saveUser')->willReturnCallback(
+            function (User $user) use (&$savedUsers): User {
+                $savedUsers[] = $user;
 
-        $metaRepository = self::createStub(AakSamlTeamMetaRepository::class);
-        $metaRepository->method('findOneBy')->willReturn(null);
+                return $user;
+            }
+        );
+        $userService->method('updateUser')->willReturnCallback(
+            function (User $user) use (&$updatedUsers): User {
+                $updatedUsers[] = $user;
 
-        return new SamlDataHydrateService($userService, $teamRepository, $metaRepository);
+                return $user;
+            }
+        );
+
+        return $userService;
     }
 
-    public function testOverlongValuesAreTruncatedToKimaiLimits(): void
+    /**
+     * @param list<Team> $savedTeams teams passed to TeamRepository::saveTeam()
+     */
+    private function teamRepository(array &$savedTeams): TeamRepository
     {
-        $savedTeams = [];
         $teamRepository = self::createStub(TeamRepository::class);
         $teamRepository->method('saveTeam')->willReturnCallback(
             function (Team $team) use (&$savedTeams): void {
@@ -71,7 +95,69 @@ final class SamlDataHydrateServiceTest extends TestCase
             }
         );
 
-        $service = $this->newService($teamRepository);
+        return $teamRepository;
+    }
+
+    /**
+     * @param array<int, AakSamlTeamMeta> $metaByOrgUnitId team meta already in the database
+     * @param list<AakSamlTeamMeta>       $savedMeta       meta passed to the repository
+     */
+    private function metaRepository(array $metaByOrgUnitId, array &$savedMeta): AakSamlTeamMetaRepository
+    {
+        $metaRepository = self::createStub(AakSamlTeamMetaRepository::class);
+        $metaRepository->method('findOneBy')->willReturnCallback(
+            static function (array $criteria) use ($metaByOrgUnitId): ?AakSamlTeamMeta {
+                $orgUnitId = $criteria['orgUnitId'] ?? null;
+
+                return \is_int($orgUnitId) ? ($metaByOrgUnitId[$orgUnitId] ?? null) : null;
+            }
+        );
+        $metaRepository->method('saveAakSamlTeamMeta')->willReturnCallback(
+            function (AakSamlTeamMeta $meta) use (&$savedMeta): void {
+                $savedMeta[] = $meta;
+            }
+        );
+
+        return $metaRepository;
+    }
+
+    private static function user(string $username): User
+    {
+        $user = new User();
+        $user->setUsername($username);
+        $user->setEmail($username);
+
+        return $user;
+    }
+
+    /**
+     * Teams get their id from the database, and hydration prunes memberships by id.
+     */
+    private static function team(string $name, int $id): Team
+    {
+        $team = new Team(name: $name);
+        (new \ReflectionProperty(Team::class, 'id'))->setValue($team, $id);
+
+        return $team;
+    }
+
+    private static function meta(Team $team, int $orgUnitId, string $managerEmail = '', string $managerName = ''): AakSamlTeamMeta
+    {
+        return new AakSamlTeamMeta($team, new SamlDTO(self::attributes()), $orgUnitId, $managerEmail, $managerName);
+    }
+
+    public function testOverlongValuesAreTruncatedToKimaiLimits(): void
+    {
+        $savedTeams = [];
+        $savedUsers = [];
+        $updatedUsers = [];
+        $savedMeta = [];
+
+        $service = new SamlDataHydrateService(
+            $this->userService([], $savedUsers, $updatedUsers),
+            $this->teamRepository($savedTeams),
+            $this->metaRepository([], $savedMeta),
+        );
         $user = new User();
 
         // Depth 5 resolves the org name via office; make the office name and the
@@ -101,8 +187,16 @@ final class SamlDataHydrateServiceTest extends TestCase
 
     public function testOverlongManagerEmailIsRejectedRatherThanTruncated(): void
     {
-        $teamRepository = self::createStub(TeamRepository::class);
-        $service = $this->newService($teamRepository);
+        $savedTeams = [];
+        $savedUsers = [];
+        $updatedUsers = [];
+        $savedMeta = [];
+
+        $service = new SamlDataHydrateService(
+            $this->userService([], $savedUsers, $updatedUsers),
+            $this->teamRepository($savedTeams),
+            $this->metaRepository([], $savedMeta),
+        );
         $user = new User();
 
         // A manager email longer than the 64-char username limit cannot be
@@ -116,5 +210,243 @@ final class SamlDataHydrateServiceTest extends TestCase
             'personaleLederUPN' => [$longEmail],
             'personaleLederDisplayName' => ['A Manager'],
         ])));
+    }
+
+    public function testUnknownTeamIsCreatedWithMetaAndTheUserAddedToIt(): void
+    {
+        $savedTeams = [];
+        $savedUsers = [];
+        $updatedUsers = [];
+        $savedMeta = [];
+
+        $service = new SamlDataHydrateService(
+            $this->userService([], $savedUsers, $updatedUsers),
+            $this->teamRepository($savedTeams),
+            $this->metaRepository([], $savedMeta),
+        );
+        $user = self::user('jane@aarhus.dk');
+
+        $service->hydrate($user, new SamlDTO(self::attributes()));
+
+        // The org-unit id is what makes the team name unique. Without a manager
+        // the suffix holds the id alone.
+        self::assertNotEmpty($savedTeams);
+        self::assertSame('ITK Development (6530)', $savedTeams[0]->getName());
+
+        self::assertCount(1, $savedMeta);
+        self::assertSame(6530, $savedMeta[0]->getOrgUnitId());
+        self::assertSame('', $savedMeta[0]->getManagerEmail());
+        self::assertSame($savedTeams[0], $savedMeta[0]->getTeam());
+
+        self::assertSame([$savedTeams[0]], $user->getTeams());
+        self::assertSame('ITK Development', $user->getTitle());
+        self::assertSame('Jane Doe', $user->getAlias());
+        self::assertSame('az12345', $user->getAccountNumber());
+        self::assertNull($user->getSupervisor());
+        self::assertFalse($user->hasRole(User::ROLE_TEAMLEAD));
+        self::assertSame([$user], $updatedUsers);
+    }
+
+    public function testKnownTeamIsRenamedInsteadOfRecreated(): void
+    {
+        $existingTeam = self::team('Old Name (6530)', 7);
+        $existingMeta = self::meta($existingTeam, 6530);
+
+        $savedTeams = [];
+        $savedUsers = [];
+        $updatedUsers = [];
+        $savedMeta = [];
+
+        $service = new SamlDataHydrateService(
+            $this->userService([], $savedUsers, $updatedUsers),
+            $this->teamRepository($savedTeams),
+            $this->metaRepository([6530 => $existingMeta], $savedMeta),
+        );
+        $user = self::user('jane@aarhus.dk');
+
+        $service->hydrate($user, new SamlDTO(self::attributes()));
+
+        // An org unit that is already mapped keeps its team (and its projects and
+        // customers); only the name follows the claims.
+        self::assertSame('ITK Development (6530)', $existingTeam->getName());
+        foreach ($savedTeams as $savedTeam) {
+            self::assertSame($existingTeam, $savedTeam);
+        }
+        self::assertSame([$existingMeta], $savedMeta);
+        self::assertSame([$existingTeam], $user->getTeams());
+    }
+
+    public function testUnknownManagerIsCreatedAsTeamLeadAndSupervisor(): void
+    {
+        $savedTeams = [];
+        $savedUsers = [];
+        $updatedUsers = [];
+        $savedMeta = [];
+
+        $service = new SamlDataHydrateService(
+            $this->userService([], $savedUsers, $updatedUsers),
+            $this->teamRepository($savedTeams),
+            $this->metaRepository([], $savedMeta),
+        );
+        $user = self::user('jane@aarhus.dk');
+
+        $service->hydrate($user, new SamlDTO(self::attributes([
+            'personaleLederUPN' => ['boss@aarhus.dk'],
+            'personaleLederDisplayName' => [str_repeat('B', 70)],
+        ])));
+
+        self::assertCount(1, $savedUsers);
+        $manager = $savedUsers[0];
+        self::assertSame('boss@aarhus.dk', $manager->getUsername());
+        self::assertSame('boss@aarhus.dk', $manager->getEmail());
+        self::assertSame('aak_saml', $manager->getAuth());
+        self::assertTrue($manager->hasRole(User::ROLE_TEAMLEAD));
+        // User::$alias is max 60 and not unique, so a long manager name is truncated.
+        self::assertSame(60, mb_strlen((string) $manager->getAlias()));
+        // A plain password is needed to pass Kimai's validator.
+        self::assertNotEmpty($manager->getPlainPassword());
+
+        // The manager becomes both supervisor and team lead of the user's team.
+        self::assertSame($manager, $user->getSupervisor());
+        self::assertNotEmpty($savedTeams);
+        self::assertSame('ITK Development (6530, boss@aarhus.dk)', $savedTeams[0]->getName());
+        self::assertSame([$manager], $savedTeams[0]->getTeamleads());
+    }
+
+    public function testKnownManagerIsReusedWithoutCreatingAUser(): void
+    {
+        $manager = self::user('boss@aarhus.dk');
+
+        $savedTeams = [];
+        $savedUsers = [];
+        $updatedUsers = [];
+        $savedMeta = [];
+
+        $service = new SamlDataHydrateService(
+            $this->userService(['boss@aarhus.dk' => $manager], $savedUsers, $updatedUsers),
+            $this->teamRepository($savedTeams),
+            $this->metaRepository([], $savedMeta),
+        );
+        $user = self::user('jane@aarhus.dk');
+
+        $service->hydrate($user, new SamlDTO(self::attributes([
+            'personaleLederUPN' => ['boss@aarhus.dk'],
+            'personaleLederDisplayName' => ['Big Boss'],
+        ])));
+
+        self::assertSame([], $savedUsers);
+        self::assertSame($manager, $user->getSupervisor());
+        self::assertNotEmpty($savedTeams);
+        self::assertSame([$manager], $savedTeams[0]->getTeamleads());
+    }
+
+    public function testFormerTeamLeadIsReplacedAndLosesTheRole(): void
+    {
+        $formerLead = self::user('old-boss@aarhus.dk');
+        $formerLead->addRole(User::ROLE_TEAMLEAD);
+
+        $team = self::team('ITK Development (6530, old-boss@aarhus.dk)', 7);
+        $team->addTeamlead($formerLead);
+
+        $manager = self::user('boss@aarhus.dk');
+
+        $savedTeams = [];
+        $savedUsers = [];
+        $updatedUsers = [];
+        $savedMeta = [];
+
+        $service = new SamlDataHydrateService(
+            $this->userService(['boss@aarhus.dk' => $manager], $savedUsers, $updatedUsers),
+            $this->teamRepository($savedTeams),
+            $this->metaRepository([6530 => self::meta($team, 6530, 'old-boss@aarhus.dk', 'Old Boss')], $savedMeta),
+        );
+        $user = self::user('jane@aarhus.dk');
+
+        $service->hydrate($user, new SamlDTO(self::attributes([
+            'personaleLederUPN' => ['boss@aarhus.dk'],
+            'personaleLederDisplayName' => ['Big Boss'],
+        ])));
+
+        // A reorganisation swaps the "personaleleder": the new manager takes over
+        // and the former lead leaves the team entirely.
+        self::assertSame([$manager], $team->getTeamleads());
+        self::assertNotContains($formerLead, $team->getUsers());
+        // No team is left for the former lead, so the role goes too - and the
+        // demoted user is the one that must be saved.
+        self::assertFalse($formerLead->hasRole(User::ROLE_TEAMLEAD));
+        self::assertContains($formerLead, $updatedUsers);
+    }
+
+    public function testMembershipsOutsideTheCurrentTeamArePrunedButLeadershipIsKept(): void
+    {
+        $memberTeam = self::team('ITK Development (6530)', 7);
+        $staleTeam = self::team('Some Other Team (4711)', 42);
+        $leadTeam = self::team('ITK (1103)', 99);
+
+        $savedTeams = [];
+        $savedUsers = [];
+        $updatedUsers = [];
+        $savedMeta = [];
+
+        $service = new SamlDataHydrateService(
+            $this->userService([], $savedUsers, $updatedUsers),
+            $this->teamRepository($savedTeams),
+            $this->metaRepository([6530 => self::meta($memberTeam, 6530)], $savedMeta),
+        );
+
+        $user = self::user('jane@aarhus.dk');
+        $user->addTeam($staleTeam);
+        $leadTeam->addTeamlead($user);
+
+        $service->hydrate($user, new SamlDTO(self::attributes()));
+
+        // A user is a plain member of exactly one team - the one the claims name -
+        // but team leadership of other teams is not ours to remove.
+        self::assertContains($memberTeam, $user->getTeams());
+        self::assertContains($leadTeam, $user->getTeams());
+        self::assertNotContains($staleTeam, $user->getTeams());
+        self::assertNotContains($user, $staleTeam->getUsers());
+    }
+
+    public function testTeamLeadGetsOwnTeamAndUsersOutsideTheEmployeeListAreRemoved(): void
+    {
+        $employee = self::user('kept@aarhus.dk');
+        $formerEmployee = self::user('gone@aarhus.dk');
+
+        // The team the user is team lead for is the lowest org unit (6530); the
+        // team the user is a member of is the one above it (1103).
+        $leadTeam = self::team('ITK Development (6530)', 9);
+        $leadTeam->addUser($employee);
+        $leadTeam->addUser($formerEmployee);
+        $memberTeam = self::team('ITK (1103)', 3);
+
+        $savedTeams = [];
+        $savedUsers = [];
+        $updatedUsers = [];
+        $savedMeta = [];
+
+        $service = new SamlDataHydrateService(
+            $this->userService([], $savedUsers, $updatedUsers),
+            $this->teamRepository($savedTeams),
+            $this->metaRepository(
+                [6530 => self::meta($leadTeam, 6530), 1103 => self::meta($memberTeam, 1103)],
+                $savedMeta,
+            ),
+        );
+
+        $user = self::user('jane@aarhus.dk');
+
+        $service->hydrate($user, new SamlDTO(self::attributes([
+            'employeeList' => ['kept@aarhus.dk'],
+        ])));
+
+        self::assertTrue($user->hasRole(User::ROLE_TEAMLEAD));
+        self::assertSame([$user], $leadTeam->getTeamleads());
+        self::assertContains($memberTeam, $user->getTeams());
+
+        // Employees that left the manager must lose the team, the manager keeps it.
+        self::assertContains($employee, $leadTeam->getUsers());
+        self::assertContains($user, $leadTeam->getUsers());
+        self::assertNotContains($formerEmployee, $leadTeam->getUsers());
     }
 }
