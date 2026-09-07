@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Update the GitHub actions to their current versions: `actions/checkout@v7` everywhere, which the
+  deprecated Node 20 runtime forced anyway.
+- Re-copy the `changelog`, `markdown`, `yaml` and `composer` workflows from the ITK templates. Besides the
+  action version that brings the push path filters the templates now carry, and `composer audit --locked` in
+  place of a full `composer install` followed by `composer audit`.
+
 - Raise static analysis to PHPStan level 9 with strict rules, deprecation rules and bleeding edge enabled
 - Compare organization ids strictly when resolving the team depth, and filter the employee list explicitly
 - Save new team lead users through the public `UserService::saveUser()` instead of Kimai's `@internal`
