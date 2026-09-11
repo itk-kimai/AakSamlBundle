@@ -127,6 +127,42 @@ All data sync happens on login through claims. This means
 }
 ```
 
+## Checking the IdP signing certificate
+
+`kimai.saml.connection.idp.x509cert` is a pinned copy of the identity provider's
+signing certificate, and nothing refreshes it. When the IdP is given a new signing
+key every login fails with `Signature validation failed. SAML Response rejected`
+until the value is updated by hand, so the failure is total and arrives without
+warning.
+
+This command turns that into an alert:
+
+``` shell
+bin/console kimai:bundle:aak-saml:check-idp-certificate \
+  --metadata-url=https://<tenant>.b2clogin.com/<tenant>.onmicrosoft.com/<policy>/Samlp/metadata
+```
+
+It reads the certificates the IdP advertises for signing and compares them with the
+configuration. The rule is containment, not equality: every published certificate
+must be configured, because onelogin/php-saml verifies against the configured
+certificates only — ignoring the one the response itself carries — and there is no
+way to know which one the IdP will sign the next response with.
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | every published certificate is configured, none expiring soon |
+| `1` | act now: a published certificate is missing, or a configured one expires within `--warn-days` (default 30) |
+| `2` | the check could not run: SAML is off, the options are wrong, or the metadata is unreachable |
+
+Only the certificates are read from the metadata. The entity id and the SSO endpoint
+are deliberately ignored, because a metadata document that could repoint sign-in at
+another host is a worse outcome than one that is merely out of date.
+
+When the check reports a missing certificate, copy it from the metadata into
+`x509cert` as a single line, then run `kimai:reload` and restart php-fpm. To carry
+both certificates across a rotation without downtime, list them under
+`idp.x509certMulti.signing` instead — onelogin tries each in turn.
+
 ## Development
 
 ``` shell

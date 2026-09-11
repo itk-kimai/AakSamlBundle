@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add `kimai:bundle:aak-saml:check-idp-certificate`: compares the configured IdP
+  signing certificates against the ones the identity provider publishes in its SAML
+  metadata, and reports any expiring within a warning window. Exits non-zero so
+  monitoring catches a rotation before it takes every login down
+
 ## 1.4.1 - 2026-07-02
 
 - Rename `tests` directory to `Tests` to comply with Kimai's PSR-4 autoloading
