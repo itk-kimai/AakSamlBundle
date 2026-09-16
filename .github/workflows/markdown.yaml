@@ -22,17 +22,20 @@ name: Markdown
 
 on:
   pull_request:
+    paths: &paths
+      - "**/*.md"
   push:
     branches:
       - main
       - develop
+    paths: *paths
 
 jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Create docker network
         run: |

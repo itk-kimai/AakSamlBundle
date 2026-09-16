@@ -102,6 +102,9 @@ class AakSamlTeamMeta
     #[Serializer\Groups(['Default'])]
     private ?string $officeName;
 
+    /**
+     * @var list<int> of hierarchical organization id's going top to bottom
+     */
     #[ORM\Column(name: 'dept_ids', type: Types::JSON, nullable: false)]
     #[Serializer\Expose]
     #[Serializer\Groups(['Default'])]
@@ -124,10 +127,24 @@ class AakSamlTeamMeta
 
         // If we are hydrating the "member" team for a team lead we don't hydrate the lowest department level.
         // Get the "depth" to go to by finding the position of "$orgUnitId" in the $departmentIds.
-        $depth = array_search($orgUnitId, $this->departmentIds);
+        // An id outside the hierarchy has no depth and is treated as the top level.
+        $position = array_search($orgUnitId, $this->departmentIds, true);
+        $depth = false === $position ? 0 : $position;
 
         $this->companyId = $samlDTO->companyId;
         $this->companyName = $samlDTO->company;
+
+        // Only the levels down to the org unit are ours to keep. Clearing them first
+        // leaves an id outside the hierarchy (or a shallower one than last login) with
+        // null values instead of uninitialised properties or values from a deeper level.
+        $this->divisionId = null;
+        $this->divisionName = null;
+        $this->departmentId = null;
+        $this->departmentName = null;
+        $this->subDepartmentId = null;
+        $this->subDepartmentName = null;
+        $this->officeId = null;
+        $this->officeName = null;
 
         if ($depth >= 1) {
             $this->divisionId = $samlDTO->divisionId;
@@ -285,11 +302,17 @@ class AakSamlTeamMeta
         $this->officeName = $officeName;
     }
 
+    /**
+     * @return list<int>
+     */
     public function getDepartmentIds(): array
     {
         return $this->departmentIds;
     }
 
+    /**
+     * @param list<int> $departmentIds
+     */
     public function setDepartmentIds(array $departmentIds): void
     {
         $this->departmentIds = $departmentIds;

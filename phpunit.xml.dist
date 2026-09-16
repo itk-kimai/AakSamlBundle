@@ -13,6 +13,8 @@
     </testsuites>
     <source>
         <include>
+            <directory>Entity</directory>
+            <directory>EventSubscriber</directory>
             <directory>Service</directory>
         </include>
     </source>
