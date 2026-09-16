@@ -203,7 +203,8 @@ class SamlDataHydrateService
 
             $teamLeadUser->setAuth('aak_saml');
 
-            $this->userService->saveNewUser($teamLeadUser);
+            // saveUser() delegates to the @internal saveNewUser() for a user without an id.
+            $this->userService->saveUser($teamLeadUser);
         }
 
         return $teamLeadUser;
@@ -222,7 +223,7 @@ class SamlDataHydrateService
                 // If the user is no longer team lead for any team then ROLE_TEAMLEAD should be removed
                 if (!$teamLead->isTeamlead()) {
                     $teamLead->removeRole(User::ROLE_TEAMLEAD);
-                    $this->userService->updateUser($teamLeadUser);
+                    $this->userService->updateUser($teamLead);
                 }
             }
         }

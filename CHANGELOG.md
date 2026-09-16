@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Update the GitHub actions to their current versions: `actions/checkout@v7` everywhere, which the
+  deprecated Node 20 runtime forced anyway.
+- Re-copy the `changelog`, `markdown`, `yaml` and `composer` workflows from the ITK templates. Besides the
+  action version that brings the push path filters the templates now carry, and `composer audit --locked` in
+  place of a full `composer install` followed by `composer audit`.
+
+- Raise static analysis to PHPStan level 9 with strict rules, deprecation rules and bleeding edge enabled
+- Compare organization ids strictly when resolving the team depth, and filter the employee list explicitly
+- Save new team lead users through the public `UserService::saveUser()` instead of Kimai's `@internal`
+  `saveNewUser()`
+- Replace the deprecated PHPUnit `expectExceptionMessage()` with `expectExceptionMessageIsOrContains()`
+- Add unit tests for `SamlClaimsLogger`, `CheckPassportEventSubscriber` and `AakSamlTeamMeta`, and cover team
+  creation, the team lead swap, membership pruning and manager creation in `SamlDataHydrateService`
+- Fix `AakSamlTeamMeta::setValues()` leaving the levels below the org unit uninitialised, so reading them threw
+  "must not be accessed before initialization" for an org unit outside the claimed hierarchy
+- Fix the team lead swap saving the new team lead instead of the demoted one when removing `ROLE_TEAMLEAD`
+- Widen the coverage source to `Entity` and `EventSubscriber`; it only listed `Service`
+
 ## 1.4.1 - 2026-07-02
 
 - Rename `tests` directory to `Tests` to comply with Kimai's PSR-4 autoloading

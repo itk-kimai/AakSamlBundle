@@ -1,5 +1,12 @@
+# The rule sets are included explicitly, so composer.json tells
+# phpstan/extension-installer to skip them and avoid double includes.
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+
 parameters:
-    level: 8
+    level: 9
     excludePaths:
         - vendor/
     treatPhpDocTypesAsCertain: false

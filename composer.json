@@ -24,7 +24,9 @@
         "kimai/kimai": "dev-main",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
         "phpstan/phpstan-symfony": "^2.0",
         "phpunit/phpunit": "^13.0",
         "symfony/console": "^6.0",
@@ -59,6 +61,12 @@
         "kimai": {
             "name": "City of Aarhus AD/SAML integration",
             "require": 26100
+        },
+        "phpstan/extension-installer": {
+            "ignore": [
+                "phpstan/phpstan-deprecation-rules",
+                "phpstan/phpstan-strict-rules"
+            ]
         }
     }
 }

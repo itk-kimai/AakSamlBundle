@@ -89,7 +89,7 @@ class SamlDTO
     public readonly ?string $office;
 
     /**
-     * @var array<int> of hierarchical organization id's going top to bottom
+     * @var list<int> of hierarchical organization id's going top to bottom
      */
     public readonly array $departmentIds;
 
@@ -151,8 +151,12 @@ class SamlDTO
         $this->subDepartmentId = $this->departmentIds[3] ?? null;
         $this->officeId = $this->departmentIds[4] ?? null;
 
-        $employeeEmailArray = explode(';', $this->getAttributeValue(self::EMPLOYEE_LIST_ATTRIBUTE, $samlAttributes));
-        $this->employeeList = array_flip(array_filter($employeeEmailArray));
+        // Non-managers get an empty "employeeList" claim, so drop the empty entries.
+        $employeeEmailArray = array_filter(
+            explode(';', $this->getAttributeValue(self::EMPLOYEE_LIST_ATTRIBUTE, $samlAttributes)),
+            static fn (string $email): bool => '' !== $email
+        );
+        $this->employeeList = array_flip($employeeEmailArray);
     }
 
     /**

@@ -162,14 +162,14 @@ final class SamlDTOTest extends TestCase
         unset($attributes['companyname']);
 
         $this->expectException(AakSamlException::class);
-        $this->expectExceptionMessage('Missing SAML attribute: companyname');
+        $this->expectExceptionMessageIsOrContains('Missing SAML attribute: companyname');
         new SamlDTO($attributes);
     }
 
     public function testMultiValueAttributeThrows(): void
     {
         $this->expectException(AakSamlException::class);
-        $this->expectExceptionMessage('Unexpected number of values');
+        $this->expectExceptionMessageIsOrContains('Unexpected number of values');
         new SamlDTO(self::attributes(['companyname' => ['a', 'b']]));
     }
 
